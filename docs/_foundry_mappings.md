@@ -1,7 +1,8 @@
 
-# Foundry VTT Actor Data Translation JSON Key Paths
+# Foundry VTT Translation JSON Key Paths
 This document provides the definitions for the technical data structures found in the campaign .md exports. Use these rules to interpret character sheets and items.
 
+## Actor Data
 
 ### Attribute Mappings
 - `system.details.level` ⮕ Character Level
@@ -34,10 +35,10 @@ This document provides the definitions for the technical data structures found i
 - `system.attributes.ac.value` ⮕ Armor Class (Defense)
 
 
-### Data Interpretation Rules
+## Data Interpretation Rules
 - **Ignore UUIDs:** Any string like `Actor.v8x9...` is a database pointer. Ignore it.
 - **Ignore Flags:** Lines starting with `flags.` are internal system settings and irrelevant to lore.
 - **Hierarchy:** The `biography` or `content` fields contain the most important narrative "Truth." Priority should be given to these over technical numbers.
 
-### Special Context (Campaign Specific)
+## Special Context (Campaign Specific)
 - **Mechanatrix:** A rare race of machine-organic hybrids. Treat any "Mechanatrix" as having high logic but low emotional intuition.

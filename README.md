@@ -7,6 +7,7 @@ The goal of this project is to build a semi-air gapped AI to support my Foundry 
     - [x] Build an Airgapped AI Service using [ollama](https://ollama.com/)
     - [x] Build an AI Dashboard using [open WebUI](https://github.com/open-webui/open-webui)
     - [ ] Build an audio TTS system for custom / unique voices for D&D Characters using [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS)
+    - [ ] ComfUI for [qwen3](https://github.com/DarioFT/ComfyUI-Qwen3-TTS)
 - [x] Integrate AI Prompts & Responses into FoundryVTT
 - [ ] Integrate TTS into OpenWeb UI and FoundryVTT
 
@@ -17,7 +18,6 @@ The goal of this project is to build a semi-air gapped AI to support my Foundry 
 - NPC Chatter
 - Lootsheet NPC
 - RPGX AI - Only supports base ollama connection and not to open WebUI preventing RAG / data lookups without premium
-
 
 <br>
 
@@ -45,3 +45,8 @@ graph LR
     style Foundry fill:#ff9900,stroke:#333,color:#fff
     style OW fill:#007bff,stroke:#fff,color:#fff
 ```
+
+<br>
+
+### Resources:
+- Similar project / inspiration: [https://www.youtube.com/watch?v=yik3czBEL2Y](https://www.youtube.com/watch?v=yik3czBEL2Y)

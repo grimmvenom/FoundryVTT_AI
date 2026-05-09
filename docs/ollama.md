@@ -2,25 +2,25 @@
 
 ## Resources:
 - [ollama](https://ollama.com/)
-- models saved to `/usr/share/ollama/manifests/registry.ollama.ai/library`
+
 
 
 ## Examples:
-- [ollama.sh](../code/ollama.sh)
+- Linux Ollama Setup Script: [ollama_setup.sh](../code/service_setup/ollama_setup.sh)
 
-## Create a new model based on .mf configuration
+Create a new model based on .mf configuration:
 ```
 ollama create DungeonMaster -f chatbots/DungeonMaster.mf
 ```
 
-## Run new model with prompt from terminal
+Run new model with prompt from terminal:
 ```
 ollama run DungeonMaster "Act as a drunk pirate and tell me where the treasure is."
 ```
 
-# Default Location on Linux
-When running as a service, Ollama uses its own system user. You can find the models here:
-` /usr/share/ollama/.ollama/models`
+## Default Location on Linux
+When running as a service, Ollama uses its own system user. 
+You can find the models here:` /usr/share/ollama/.ollama/models`
 
 Inside that folder, you’ll see:
 * **/manifests:** Small text files that describe the model (metadata).
@@ -28,7 +28,7 @@ Inside that folder, you’ll see:
 
 ---
 
-### How to see them (Permission Tip)
+## How to view Permissions
 Because that folder is owned by the `ollama` system user, you might get a "Permission Denied" if you try to browse it normally. Use `sudo` to peek inside:
 ```bash
 sudo ls -lh /usr/share/ollama/.ollama/models
@@ -36,11 +36,14 @@ sudo ls -lh /usr/share/ollama/.ollama/models
 
 ---
 
-### Moving Models to a Different Drive
+### Migrating / Moving Models to a Different Location
 Since AI models are huge (Llama 3.1 8B is ~4.7GB), you might want to move them if your root partition is getting full.
 
-1.  **Stop the service:** `sudo systemctl stop ollama`
-2.  **Move the folder:** `sudo mv /usr/share/ollama/.ollama/models /path/to/your/big/drive/`
+1.  **Stop the service:** ```sudo systemctl stop ollama```
+2.  **Move the folder:**
+```
+sudo mv /usr/share/ollama/.ollama/models /path/to/your/big/drive/
+```
 3.  **Update the "Jail" (Service Override):**
     Remember the `systemctl edit` command we used for privacy? Use it again:
     ```bash
@@ -63,7 +66,7 @@ If you're worried about disk space, you can always delete models you aren't usin
 
 ---
 
-# Additional Information:
+## Additional Information:
 
 You can configure personalities in two ways: **permanently** (by creating a new "custom model") or **dynamically** (per character in Foundry).
 
@@ -141,10 +144,11 @@ Whether you are editing a Modelfile or module settings, these two settings chang
     - **Higher (0.9):** More diverse vocabulary and "flair."
         
 
+<br>
 
-# Chat Agents
+## Chat Agents
 
-You are spot on—**OpenClaw** is a major part of the local AI conversation in 2026, but it is fundamentally different from a standard "chatbot."
+**OpenClaw** is a major part of the local AI conversation in 2026, but it is fundamentally different from a standard "chatbot."
 
 ### What is OpenClaw?
 If **Ollama** is the "brain" (the model), **OpenClaw** is the "hands." 
@@ -161,7 +165,7 @@ Probably not for your **NPCs**, but maybe for **you** as a GM.
 ---
 
 ### How to run a Chatbot right now (The "Safe" Way)
-Since you are on Manjaro and want to keep things air-capped, I recommend **Open WebUI** over OpenClaw for your first "chatbot" experience. It is much more secure because it has built-in user authentication.
+Since you are on Linux and want to keep things air-capped, I recommend **Open WebUI** over OpenClaw for your first "chatbot" experience. It is much more secure because it has built-in user authentication.
 
 #### 1. Quick Start: The Terminal Chat
 You already have everything needed to chat right now. Open your terminal and type:
@@ -184,7 +188,7 @@ If you want the full "Local ChatGPT" interface (including character profiles and
 
 ---
 
-### ⚠️ Warning about OpenClaw on Manjaro
+### ⚠️ Warning about OpenClaw on Linux
 Because OpenClaw can execute terminal commands (the "Hands" part), it is much more dangerous to leave unconfigured. 
 * **The "Jail" Issue:** If you haven't locked down your permissions, a rogue prompt could technically tell OpenClaw to delete files on your Linux machine. 
 * **Privacy:** OpenClaw is designed to connect to messaging apps (Telegram, WhatsApp). If your goal is to stay **air-capped**, OpenClaw’s best features will be disabled because it thrives on those external connections.
