@@ -19,25 +19,26 @@ The goal of this project is to build a semi-air gapped AI to support my Foundry 
 - RPGX AI - Only supports base ollama connection and not to open WebUI preventing RAG / data lookups without premium
 
 
+<br>
 
-## Integration:
-```Mermaid
+## Topology:
+```mermaid
 graph LR
     subgraph Docker_Container_Network ["Docker Environment"]
         direction TB
-        OW [Open WebUI]
-        Ollama [Ollama / Llama 3]
-        TTS [Qwen3-TTS]
+        OW["Open WebUI"]
+        Ollama["Ollama / Llama 3"]
+        TTS["Qwen3-TTS"]
         
-        OW <-->|API Requests| Ollama
-        OW <-->|Audio Generation| TTS
+        OW <--> Ollama
+        OW <--> TTS
     end
 
-    Foundry[Foundry VTT]
+    Foundry["Foundry VTT"]
 
     %% Connections
-    Foundry ---->|Prompt / Actor Data| OW
-    OW ---->|Synthesized Audio| Foundry
+    Foundry -->|Prompt AI / Lore Data| OW
+    OW -->|Synthesized Audio| Foundry
 
     %% Styling
     style Docker_Container_Network fill:#f5f5f5,stroke:#333,stroke-width:2px
