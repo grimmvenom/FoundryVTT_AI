@@ -1,0 +1,35 @@
+services:
+  qwen3_tts:
+    build: 
+      context: ./qwen3_tts
+    container_name: qwen3-tts-engine
+    runtime: nvidia
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./models:/app/models
+    environment:
+      - MODEL_CHECKPOINT=qwen3-tts-7b
+      - DEVICE=cuda
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 50051))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  comfyui:
+    build:
+      context: ./qwen3_tts_comfy_ui
+    container_name: comfyui-tts-interface
+    depends_on:
+      qwen3_tts:
+        condition: service_healthy
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./comfy_input:/input
+      - ./comfy_output:/output
+      # REMOVE OR COMMENT OUT THIS LINE:
+      # - ./custom_nodes/comfyui-qwen3-tts:/app/custom_nodes/comfyui-qwen3-tts
+    environment:
+      - QWEN_TTS_ENDPOINT=http://qwen3_tts:50051

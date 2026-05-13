@@ -7,7 +7,7 @@ The goal of this project is to build a semi-air gapped AI to support my Foundry 
     - [x] Build an Airgapped AI Service using [ollama](https://ollama.com/)
     - [x] Build an AI Dashboard using [open WebUI](https://github.com/open-webui/open-webui)
     - [ ] Build an audio TTS system for custom / unique voices for D&D Characters using [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS)
-    - [ ] ComfUI for [qwen3](https://github.com/DarioFT/ComfyUI-Qwen3-TTS)
+    - [ ] ComfyUI for [qwen3](https://github.com/DarioFT/ComfyUI-Qwen3-TTS)
 - [x] Integrate AI Prompts & Responses into FoundryVTT
 - [ ] Integrate TTS into OpenWeb UI and FoundryVTT
 
