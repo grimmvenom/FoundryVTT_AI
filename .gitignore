@@ -1,3 +1,6 @@
 ollama_storage/*
 open_webui_data/*
 training_data/foundry/*
+qwen3_tts/cache
+qwen3_tts/input
+qwen3_tts
