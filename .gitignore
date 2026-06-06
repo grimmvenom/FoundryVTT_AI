@@ -3,4 +3,5 @@ open_webui_data/*
 training_data/foundry/*
 qwen3_tts/cache
 qwen3_tts/input
-qwen3_tts
+qwen3_tts/output/audio
+qwen3_tts/output/qwen3tts

@@ -1,0 +1,783 @@
+{
+  "id": "9c31c47d-f3d6-43ba-bbe2-63cda1c7abb1",
+  "revision": 0,
+  "last_node_id": 64,
+  "last_link_id": 94,
+  "nodes": [
+    {
+      "id": 47,
+      "type": "Qwen3TTSAudioPostProcess",
+      "pos": [
+        883.4696867541215,
+        -365.5312567983109
+      ],
+      "size": [
+        337.394140625,
+        106
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            88
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSAudioPostProcess",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        10,
+        50,
+        44100
+      ]
+    },
+    {
+      "id": 55,
+      "type": "SaveAudio",
+      "pos": [
+        1293.2792478789397,
+        168.0193786986549
+      ],
+      "size": [
+        904.1799256490985,
+        466.3131254878125
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 83
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "SaveAudio"
+      },
+      "widgets_values": [
+        "audio/ComfyUI"
+      ]
+    },
+    {
+      "id": 60,
+      "type": "SaveAudio",
+      "pos": [
+        1288.7464411945448,
+        -476.1602551788331
+      ],
+      "size": [
+        998.4489261526855,
+        489.1201529647326
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 88
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "SaveAudio"
+      },
+      "widgets_values": [
+        "audio/ComfyUI"
+      ]
+    },
+    {
+      "id": 42,
+      "type": "Qwen3TTSAdvancedDialogue",
+      "pos": [
+        426.33419796255475,
+        -355.07981033027016
+      ],
+      "size": [
+        384.5552734375,
+        374
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_obj",
+          "type": "QWEN3_MODEL",
+          "link": 67
+        },
+        {
+          "name": "texts",
+          "type": "LIST",
+          "link": 63
+        },
+        {
+          "name": "instructs",
+          "type": "LIST",
+          "link": 64
+        },
+        {
+          "name": "roles",
+          "type": "LIST",
+          "link": 65
+        },
+        {
+          "name": "pauses",
+          "type": "LIST",
+          "link": 66
+        },
+        {
+          "name": "role_bank",
+          "type": "QWEN3_ROLE_BANK",
+          "link": 71
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            74,
+            83
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSAdvancedDialogue",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        622085536542438,
+        "fixed",
+        4096,
+        0.7,
+        0.8,
+        50,
+        1.1,
+        0.9,
+        1,
+        50
+      ]
+    },
+    {
+      "id": 33,
+      "type": "Qwen3TTSLoader",
+      "pos": [
+        -1912.3967521165564,
+        -520.6726729639545
+      ],
+      "size": [
+        607.8774566052206,
+        187.1863407594617
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model_obj",
+          "type": "QWEN3_MODEL",
+          "links": [
+            48,
+            67
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "wanaigc/ComfyUI-Qwen3-TTS",
+        "Node name for S&R": "Qwen3TTSLoader",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+        "HuggingFace",
+        "bf16",
+        "sdpa",
+        true
+      ]
+    },
+    {
+      "id": 51,
+      "type": "Qwen3TTSSenseVoiceASR",
+      "pos": [
+        -1783.1310782228643,
+        211.4604536232254
+      ],
+      "size": [
+        378.3322251677033,
+        126
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 79
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            81,
+            85
+          ]
+        },
+        {
+          "name": "suggested_instruct",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSSenseVoiceASR",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        "iic/SenseVoiceSmall",
+        "en"
+      ]
+    },
+    {
+      "id": 53,
+      "type": "PreviewAny",
+      "pos": [
+        -1340.5533396710425,
+        188.10179585468677
+      ],
+      "size": [
+        414.2142082461878,
+        269.9468850425394
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 81
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 45,
+      "type": "Qwen3TTSRoleBank",
+      "pos": [
+        -7.030446500039761,
+        -331.6898461293641
+      ],
+      "size": [
+        272.1177734375,
+        166
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prev_role_bank",
+          "shape": 7,
+          "type": "QWEN3_ROLE_BANK",
+          "link": null
+        },
+        {
+          "name": "prompt_1",
+          "shape": 7,
+          "type": "QWEN3_PROMPT",
+          "link": 82
+        },
+        {
+          "name": "prompt_2",
+          "shape": 7,
+          "type": "QWEN3_PROMPT",
+          "link": 90
+        },
+        {
+          "name": "prompt_3",
+          "shape": 7,
+          "type": "QWEN3_PROMPT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "role_bank",
+          "type": "QWEN3_ROLE_BANK",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSRoleBank",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        "esha",
+        "james",
+        "voice3"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "LoadAudio",
+      "pos": [
+        -2432.8366093769464,
+        40.68316669767403
+      ],
+      "size": [
+        463.6284075801643,
+        145.13876903581865
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            47,
+            79
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.10.0",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "film-theory-stranger-things-is-lying-to-you-conformitygate_xB5pBLBd.mp3",
+        null,
+        null
+      ]
+    },
+    {
+      "id": 40,
+      "type": "Qwen3TTSScriptProcessor",
+      "pos": [
+        -331.31878041440405,
+        -58.413685106913164
+      ],
+      "size": [
+        596.900763352777,
+        509.41524663485234
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "texts",
+          "type": "LIST",
+          "links": [
+            63
+          ]
+        },
+        {
+          "name": "instructs",
+          "type": "LIST",
+          "links": [
+            64
+          ]
+        },
+        {
+          "name": "roles",
+          "type": "LIST",
+          "links": [
+            65
+          ]
+        },
+        {
+          "name": "pauses",
+          "type": "LIST",
+          "links": [
+            66
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSScriptProcessor",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        "james: [Energetic host] Welcome back to the show! [pause:0.5] Esha, did you see the comments on the last video? [laugh]\n\nesha: [Happy, playful] I did! [pause:0.3] People really loved your \"Robot Voice\" impression. [pause:0.8] It was hilarious. [laugh]\n\njames: [Professional] It was fun. [pause:1.0] But... we have to shift gears for a second. [pause:1.0]\n\njames: [Sad, slow voice] Unfortunately... [pause:0.5] the \"Project Alpha\" launch... has been cancelled. [pause:1.2]\n\nesha: [Sad, whispering] I know. [pause:0.5] It is really heartbreaking news for the team. [pause:0.8] [sigh] [pause:0.5] They worked so hard on it.",
+        "正常语气说话。"
+      ]
+    },
+    {
+      "id": 35,
+      "type": "Qwen3TTSVoiceClonePrompt",
+      "pos": [
+        -1271.8853660583218,
+        -131.68141734115036
+      ],
+      "size": [
+        519.7641194870334,
+        205.8307127095551
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model_obj",
+          "type": "QWEN3_MODEL",
+          "link": 48
+        },
+        {
+          "name": "ref_audio",
+          "type": "AUDIO",
+          "link": 47
+        },
+        {
+          "name": "ref_text",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "ref_text"
+          },
+          "link": 85
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice_clone_prompt",
+          "type": "QWEN3_PROMPT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "wanaigc/ComfyUI-Qwen3-TTS",
+        "Node name for S&R": "Qwen3TTSVoiceClonePrompt",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 63,
+      "type": "Qwen3TTSVoiceClonePrompt",
+      "pos": [
+        -1414.903369764023,
+        599.1550199407865
+      ],
+      "size": [
+        519.7641194870334,
+        205.8307127095551
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model_obj",
+          "type": "QWEN3_MODEL",
+          "link": null
+        },
+        {
+          "name": "ref_audio",
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice_clone_prompt",
+          "type": "QWEN3_PROMPT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "wanaigc/ComfyUI-Qwen3-TTS",
+        "Node name for S&R": "Qwen3TTSVoiceClonePrompt",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 48,
+      "type": "Qwen3TTSPromptManager",
+      "pos": [
+        -554.0116558767511,
+        -462.6098139747786
+      ],
+      "size": [
+        332.00390625,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "voice_clone_prompt",
+          "shape": 7,
+          "type": "QWEN3_PROMPT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice_clone_prompt",
+          "type": "QWEN3_PROMPT",
+          "links": [
+            82
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSPromptManager",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        "Load",
+        "esha_voice.qwen3tts",
+        "esha_voice"
+      ]
+    },
+    {
+      "id": 61,
+      "type": "Qwen3TTSPromptManager",
+      "pos": [
+        -548.941252357914,
+        -257.3287229530237
+      ],
+      "size": [
+        332.00390625,
+        106
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "voice_clone_prompt",
+          "shape": 7,
+          "type": "QWEN3_PROMPT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice_clone_prompt",
+          "type": "QWEN3_PROMPT",
+          "links": [
+            90
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Qwen3TTSPromptManager",
+        "cnr_id": "qwen3-tts",
+        "ver": "e4f6a914c8170b189ee52dfe988e02192c1e826a"
+      },
+      "widgets_values": [
+        "Load",
+        "James_voice.qwen3tts",
+        "James_voice"
+      ]
+    }
+  ],
+  "links": [
+    [
+      47,
+      6,
+      0,
+      35,
+      1,
+      "AUDIO"
+    ],
+    [
+      48,
+      33,
+      0,
+      35,
+      0,
+      "QWEN3_MODEL"
+    ],
+    [
+      63,
+      40,
+      0,
+      42,
+      1,
+      "LIST"
+    ],
+    [
+      64,
+      40,
+      1,
+      42,
+      2,
+      "LIST"
+    ],
+    [
+      65,
+      40,
+      2,
+      42,
+      3,
+      "LIST"
+    ],
+    [
+      66,
+      40,
+      3,
+      42,
+      4,
+      "LIST"
+    ],
+    [
+      67,
+      33,
+      0,
+      42,
+      0,
+      "QWEN3_MODEL"
+    ],
+    [
+      71,
+      45,
+      0,
+      42,
+      5,
+      "QWEN3_ROLE_BANK"
+    ],
+    [
+      74,
+      42,
+      0,
+      47,
+      0,
+      "AUDIO"
+    ],
+    [
+      79,
+      6,
+      0,
+      51,
+      0,
+      "AUDIO"
+    ],
+    [
+      81,
+      51,
+      0,
+      53,
+      0,
+      "STRING"
+    ],
+    [
+      82,
+      48,
+      0,
+      45,
+      1,
+      "QWEN3_PROMPT"
+    ],
+    [
+      83,
+      42,
+      0,
+      55,
+      0,
+      "AUDIO"
+    ],
+    [
+      85,
+      51,
+      0,
+      35,
+      2,
+      "STRING"
+    ],
+    [
+      88,
+      47,
+      0,
+      60,
+      0,
+      "AUDIO"
+    ],
+    [
+      90,
+      61,
+      0,
+      45,
+      2,
+      "QWEN3_PROMPT"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.544500000000007,
+      "offset": [
+        3673.94690402212,
+        1094.0204986314072
+      ]
+    },
+    "frontendVersion": "1.36.14",
+    "workflowRendererVersion": "LG",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

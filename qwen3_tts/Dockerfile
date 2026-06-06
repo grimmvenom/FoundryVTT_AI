@@ -5,12 +5,15 @@ EXPOSE 8188
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_ROOT_USER_ACTION=ignore
 
+# Core system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     ffmpeg \
     libsndfile1 \
     sox \
     libsox-fmt-all \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -31,15 +34,25 @@ RUN pip install torchsde einops transformers>=4.28.1 safetensors>=0.4.2
 RUN sed -i '/torch/d' requirements.txt && \
     pip install -r requirements.txt
 
-# 6. Inject the advanced Qwen3-TTS custom node (wanaigc fork with Script Processor & SenseVoice ASR)
+# 6. Inject ComfyUI-Manager
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git ./custom_nodes/ComfyUI-Manager && \
+    sed -i '/torch/d' ./custom_nodes/ComfyUI-Manager/requirements.txt && \
+    pip install -r ./custom_nodes/ComfyUI-Manager/requirements.txt
+
+# 7. Inject the advanced Qwen3-TTS custom node (wanaigc fork with Script Processor & SenseVoice ASR)
 RUN git clone https://github.com/wanaigc/ComfyUI-Qwen3-TTS.git ./custom_nodes/ComfyUI-Qwen3-TTS
 
-# 7. Clean and install custom node dependencies
+# 8. Clean and install custom node dependencies
 RUN sed -i '/torch/d' ./custom_nodes/ComfyUI-Qwen3-TTS/requirements.txt && \
     pip install -r ./custom_nodes/ComfyUI-Qwen3-TTS/requirements.txt
 
-# 8. Rebuild FlashAttention 2 targeting the local container layout
+# 9. Rebuild FlashAttention 2 targeting the local container layout
 RUN pip install flash-attn --no-build-isolation --extra-index-url https://flashattentions.blob.core.windows.net/wheel
 
-CMD ["python3", "main.py", "--listen", "0.0.0.0"]
+# 10. Fix the pre-installed OpenCV breaking type-hint loop via native shell patch
+RUN OPENCV_PATH=$(python3 -c "import cv2, os; print(os.path.dirname(cv2.__file__))") && \
+    if [ -f "$OPENCV_PATH/typing/__init__.py" ]; then \
+        sed -i 's/LayerId = cv2.dnn.DictValue/# LayerId = cv2.dnn.DictValue/g' "$OPENCV_PATH/typing/__init__.py"; \
+    fi
 
+CMD ["python3", "main.py", "--listen", "0.0.0.0"]
