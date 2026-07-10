@@ -3,14 +3,27 @@ services:
     build: 
       context: ./qwen3_tts
       dockerfile: Dockerfile
-    container_name: comfyui-standalone
+    container_name: qwen3-tts
+    restart: unless-stopped
     ipc: host
     ports:
       - "8188:8188"
     volumes:
       - ./qwen3_tts/input:/app/input
       - ./qwen3_tts/output:/app/output
-      - ./qwen3_tts/cache:/root/.cache/huggingface 
+      # Voice Library
+      # - ./qwen3_tts/voices:/app/models/qwen-tts/voices
+      # Persistent ComfyUI models
+      - ./qwen3_tts/models:/app/models
+      # Workflows
+      - ./qwen3_tts/workflows:/app/user/default/workflows
+      # HF cache
+      - ./qwen3_tts/cache:/root/.cache/huggingface
+      # Pytorch cache
+      - ./qwen3_tts/torch_cache:/root/.cache/torch
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
