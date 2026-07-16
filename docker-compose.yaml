@@ -67,7 +67,7 @@ services:
       - 'AUDIO_TTS_VOICE=af_bella' # Default voice
       # ------------------------------------
       - 'ENABLE_CORS=True'
-      - 'CORS_ALLOW_ORIGIN="*"'
+      # - 'CORS_ALLOW_ORIGIN="*"'
       - 'ENABLE_RAG_LOCAL_FILES_IMPORT=True'
       - 'RAG_EMBEDDING_ENGINE=ollama'
       - 'RAG_EMBEDDING_MODEL=nomic-embed-text:latest'

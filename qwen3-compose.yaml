@@ -10,17 +10,15 @@ services:
       - "8188:8188"
     volumes:
       - ./qwen3_tts/input:/app/input
-      - ./qwen3_tts/output:/app/output
-      # Voice Library
-      # - ./qwen3_tts/voices:/app/models/qwen-tts/voices
+      # - ./qwen3_tts/output:/app/output
       # Persistent ComfyUI models
       - ./qwen3_tts/models:/app/models
-      # Workflows
+      # Workflows 
       - ./qwen3_tts/workflows:/app/user/default/workflows
       # HF cache
       - ./qwen3_tts/cache:/root/.cache/huggingface
       # Pytorch cache
-      - ./qwen3_tts/torch_cache:/root/.cache/torch
+      # - ./qwen3_tts/torch_cache:/root/.cache/torch
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility

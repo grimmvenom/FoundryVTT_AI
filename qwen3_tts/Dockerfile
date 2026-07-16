@@ -55,7 +55,8 @@ RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git ./custom_nodes/Com
     pip install -r ./custom_nodes/ComfyUI-Manager/requirements.txt
 
 # Inject the flybirdxx Qwen-TTS custom node
-RUN git clone https://github.com/flybirdxx/ComfyUI-Qwen-TTS.git ./custom_nodes/ComfyUI-Qwen-TTS
+# RUN git clone https://github.com/flybirdxx/ComfyUI-Qwen-TTS.git ./custom_nodes/ComfyUI-Qwen-TTS
+RUN git clone https://github.com/grimmvenom/ComfyUI-Qwen-TTS.git ./custom_nodes/ComfyUI-Qwen-TTS
 
 # Clean and install flybirdxx custom node dependencies
 RUN if [ -f ./custom_nodes/ComfyUI-Qwen-TTS/requirements.txt ]; then \
