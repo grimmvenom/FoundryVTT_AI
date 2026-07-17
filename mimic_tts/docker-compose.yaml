@@ -1,0 +1,48 @@
+# docker compose up
+# docker compose run --rm --entrypoint bash mimic-tts
+
+services:
+  mimic-tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mimic-tts
+    ipc: host
+    stdin_open: true
+    tty: true
+    ports:
+      - "8188:8000"
+
+    volumes:
+      - ./app:/app/app
+      - ./config:/app/config
+      # Persistent model/data storage
+      - ./tts_data/cache:/root/.cache/huggingface
+      - ./tts_data/models:/app/models
+      - ./tts_data/characters:/app/characters
+      - ./tts_data/input:/app/input
+      - ./tts_data/output:/app/output
+    environment:
+      MIMIC_CONFIG: /app/config/default.ini
+      HF_HOME: /root/.cache/huggingface
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      HF_HUB_DOWNLOAD_TIMEOUT: 120
+      HF_HUB_ETAG_TIMEOUT: 120
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
