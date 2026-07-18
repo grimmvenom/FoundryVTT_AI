@@ -1,35 +1,32 @@
 from pathlib import Path
 
 from app.core.speech_to_text import SpeechToText
+from app.core.transcribe import Transcriber
 
 
 def transcribe_command(args):
 
-    audio = Path(args.audio)
+    transcriber = Transcriber(
+        SpeechToText(
+            model=args.model,
+            device=args.device,
+        )
+    )
 
-    if not audio.exists():
-        raise FileNotFoundError(audio)
-
-    stt = SpeechToText(
-        model=args.model,
-        device=args.device,
+    result = transcriber.transcribe(
+        Path(args.audio)
     )
 
     print()
-
-    print(f"Transcribing: {audio}")
-
-    transcript = stt.transcribe(audio)
-
-    print("\nTranscript:\n")
-    print(transcript)
+    print("Transcript:\n")
+    print(result.transcript)
 
     if args.output:
 
         output = Path(args.output)
 
         output.write_text(
-            transcript,
+            result.transcript,
             encoding="utf-8",
         )
 

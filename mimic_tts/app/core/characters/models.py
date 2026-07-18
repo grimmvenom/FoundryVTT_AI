@@ -2,44 +2,76 @@
 ######################################
 Summary:
 ######################################
-- Holds Shared Return Objects
-
+- Shared Character Models
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 
 
+DEFAULT_VOICE_FILENAME = "voice.qvp"
+DEFAULT_METADATA_FILENAME = "metadata.json"
+DEFAULT_TRANSCRIPT_FILENAME = "transcript.txt"
+
+
 @dataclass(slots=True)
 class Character:
     """
-    Where things live on disk
+    Represents a persistent roleplay character.
     """
+
     name: str
     directory: Path
-    voice_path: Path
-    transcript_path: Path
-    metadata_path: Path
+
+    voice_filename: str = DEFAULT_VOICE_FILENAME
+
+    @property
+    def voice_path(self) -> Path:
+        return self.directory / self.voice_filename
+
+    @property
+    def metadata_path(self) -> Path:
+        return self.directory / DEFAULT_METADATA_FILENAME
+
+    @property
+    def transcript_path(self) -> Path:
+        return self.directory / DEFAULT_TRANSCRIPT_FILENAME
 
 
 @dataclass(slots=True)
 class CharacterMetadata:
-    """
-    Contents of metadata.json
-    """
     name: str
-    source_audio: str
-    voice_filename: str = "voice.qvp"
-    transcript_filename: str = "transcript.txt"
-    instructions: str | None = None
-    created_by: str = "mimic-tts"
-    version: int = 1
+    source_audio: str = ""
+
+    personality: str = ""
+    description: str = ""
+
+    voice_filename: str = DEFAULT_VOICE_FILENAME
 
 
 @dataclass(slots=True)
 class CreateCharacterResult:
-    """
-    Results of creating a character
-    """
     character: Character
     transcript: str
+
+
+@dataclass(slots=True)
+class RoleplayRequest:
+    character: Character
+    script: str
+    instructions: str = ""
+    emotion: str = "neutral"
+    output: Path | None = None
+
+
+@dataclass(slots=True)
+class RoleplayRequest:
+    character: Character
+
+    text: str
+
+    instructions: str = ""
+
+    emotion: str = "neutral"
+
+    output_path: Path | None = None

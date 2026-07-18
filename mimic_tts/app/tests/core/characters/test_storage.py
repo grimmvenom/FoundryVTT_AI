@@ -1,13 +1,14 @@
 from app.core.characters.storage import CharacterStorage
 from app.core.characters.models import CharacterMetadata
-import pytest
 
 
 def test_create_character(tmp_path):
 
     storage = CharacterStorage(tmp_path)
 
-    character = storage.create("louise")
+    character = storage.create(
+        "louise"
+    )
 
     assert character.directory.exists()
     assert character.voice_path.name == "voice.qvp"
@@ -17,11 +18,13 @@ def test_save_and_load_transcript(tmp_path):
 
     storage = CharacterStorage(tmp_path)
 
-    character = storage.create("louise")
+    character = storage.create(
+        "louise"
+    )
 
     storage.save_transcript(
         character,
-        "hello world"
+        "hello world",
     )
 
     transcript = storage.load_transcript(
@@ -35,12 +38,15 @@ def test_save_and_load_metadata(tmp_path):
 
     storage = CharacterStorage(tmp_path)
 
-    character = storage.create("louise")
+    character = storage.create(
+        "louise"
+    )
 
     metadata = CharacterMetadata(
         name="louise",
         source_audio="/tmp/audio.wav",
-        instructions="Energetic",
+        personality="Energetic child genius",
+        description="A mischievous character",
     )
 
     storage.save_metadata(
@@ -49,30 +55,50 @@ def test_save_and_load_metadata(tmp_path):
     )
 
     loaded = storage.load_metadata(
-        character
+        character,
     )
 
     assert loaded.name == "louise"
-    assert loaded.instructions == "Energetic"
+    assert loaded.source_audio == "/tmp/audio.wav"
+
+    assert loaded.personality == (
+        "Energetic child genius"
+    )
+
+    assert loaded.description == (
+        "A mischievous character"
+    )
 
 
 def test_exists(tmp_path):
 
     storage = CharacterStorage(tmp_path)
 
-    assert not storage.exists("louise")
+    assert not storage.exists(
+        "louise"
+    )
 
-    storage.create("louise")
+    storage.create(
+        "louise"
+    )
 
-    assert storage.exists("louise")
+    assert storage.exists(
+        "louise"
+    )
 
 
 def test_delete(tmp_path):
 
     storage = CharacterStorage(tmp_path)
 
-    storage.create("louise")
+    storage.create(
+        "louise"
+    )
 
-    storage.delete("louise")
+    storage.delete(
+        "louise"
+    )
 
-    assert not storage.exists("louise")
+    assert not storage.exists(
+        "louise"
+    )

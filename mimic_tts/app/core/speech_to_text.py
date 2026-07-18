@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from faster_whisper import WhisperModel
-
 
 class SpeechToText:
     """
@@ -22,17 +20,17 @@ class SpeechToText:
 
     def __init__(
         self,
-        model_name="large-v3",
+        model="large-v3",
         device="cuda",
         compute_type="float16",
     ):
 
-        self.model_name = model_name
+        from faster_whisper import WhisperModel
+        self.model_name = model
         self.device = device
         self.compute_type = compute_type
 
         self.model = None
-
 
 
     def load(self):
@@ -67,7 +65,7 @@ class SpeechToText:
 
 
 
-    def validate_audio_file(
+    def validate_audio(
         self,
         audio_path: Path
     ):
@@ -105,7 +103,7 @@ class SpeechToText:
         audio_path = Path(audio_path)
 
 
-        self.validate_audio_file(
+        self.validate_audio(
             audio_path
         )
 

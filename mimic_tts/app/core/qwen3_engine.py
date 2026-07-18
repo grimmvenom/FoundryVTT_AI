@@ -272,28 +272,62 @@ class Qwen3Engine:
         self,
         character,
         text,
+        instructions=None,
         emotion=None,
     ):
         """
-        Future roleplay interface.
-
-        Example:
-
-        character:
-            louise.qvp
-
-        text:
-            "Welcome to my dungeon"
-
-        emotion:
-            mischievous
+        Generate roleplay audio from a character.
         """
 
+        if not self.loaded:
+            self.load()
 
-        raise NotImplementedError(
-            "Roleplay generation not implemented yet"
+        if not character.voice_path.exists():
+            raise FileNotFoundError(
+                f"Missing voice profile: {character.voice_path}"
+            )
+
+        with open(
+            character.voice_path,
+            "r",
+        ) as f:
+
+            profile = json.load(f)
+
+
+        audio_path = Path(
+            profile["audio_source"]
         )
 
+        transcript = profile["transcript"]
+
+
+        prompt = ""
+
+        if character.personality:
+            prompt += (
+                "Character personality:\n"
+                f"{character.personality}\n\n"
+            )
+
+        if instructions:
+            prompt += (
+                "Performance instructions:\n"
+                f"{instructions}\n\n"
+            )
+
+        if emotion:
+            prompt += (
+                "Emotion:\n"
+                f"{emotion}\n\n"
+            )
+
+
+        return self.clone_voice(
+            text=prompt + text,
+            audio_path=audio_path,
+            transcript=transcript,
+        )
 
 
     ############################################################

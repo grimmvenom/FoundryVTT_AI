@@ -19,9 +19,9 @@ services:
       # Persistent model/data storage
       - ./tts_data/cache:/root/.cache/huggingface
       - ./tts_data/models:/app/models
-      - ./tts_data/characters:/app/characters
-      - ./tts_data/input:/app/input
-      - ./tts_data/output:/app/output
+      - ./tts_data/characters:/app/tts_data/characters
+      - ./tts_data/input:/app/tts_data/input
+      - ./tts_data/output:/app/tts_data/output
     environment:
       MIMIC_CONFIG: /app/config/default.ini
       HF_HOME: /root/.cache/huggingface

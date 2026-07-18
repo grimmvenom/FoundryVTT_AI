@@ -1,127 +1,87 @@
 """
-Character Storage
-
-Filesystem abstraction for character data.
-
-Responsible for:
-- creating character directories
-- saving/loading metadata
-- saving/loading transcripts
-- locating voice profiles
+######################################
+Summary:
+######################################
+- Character filesystem access
 """
 
+from __future__ import annotations
+
 import json
+import shutil
 from pathlib import Path
-from app.core.characters.models import (
+from dataclasses import asdict
+from app.config import settings
+
+from .models import (
     Character,
     CharacterMetadata,
 )
-from dataclasses import asdict
 
 
 class CharacterStorage:
 
     def __init__(
         self,
-        root_directory="/app/tts_data/characters",
+        root: Path | None = None,
     ):
 
-        self.root = Path(root_directory)
-
-        self.root.mkdir(
-            parents=True,
-            exist_ok=True,
+        self.root = Path(
+            root or settings.characters_dir
         )
 
     #
-    # Path helpers
+    # Helpers
     #
 
-    def character_directory(
+    def character_path(
         self,
         name: str,
     ) -> Path:
 
         return self.root / name
 
-
-    def voice_path(
-        self,
-        name: str,
-        filename="voice.qvp",
-    ) -> Path:
-
-        return (
-            self.character_directory(name)
-            / filename
-        )
-
-
-    def transcript_path(
-        self,
-        name: str,
-    ) -> Path:
-
-        return (
-            self.character_directory(name)
-            / "transcript.txt"
-        )
-
-
-    def metadata_path(
-        self,
-        name: str,
-    ) -> Path:
-
-        return (
-            self.character_directory(name)
-            / "metadata.json"
-        )
-
     #
-    # Character management
+    # CRUD
     #
-
-    def exists(
-        self,
-        name: str,
-    ) -> bool:
-
-        return self.character_directory(name).exists()
-
 
     def create(
         self,
         name: str,
     ) -> Character:
 
-        directory = self.character_directory(name)
+        directory = self.character_path(
+            name
+        )
 
         directory.mkdir(
             parents=True,
-            exist_ok=True,
+            exist_ok=False,
         )
 
         return Character(
             name=name,
             directory=directory,
-            voice_path=self.voice_path(name),
-            transcript_path=self.transcript_path(name),
-            metadata_path=self.metadata_path(name),
         )
 
+    def exists(
+        self,
+        name: str,
+    ) -> bool:
+
+        return self.character_path(
+            name
+        ).exists()
 
     def delete(
         self,
         name: str,
     ):
 
-        import shutil
-
-        directory = self.character_directory(name)
-
-        if directory.exists():
-            shutil.rmtree(directory)
+        shutil.rmtree(
+            self.character_path(name),
+            ignore_errors=True,
+        )
 
     #
     # Transcript
@@ -134,19 +94,15 @@ class CharacterStorage:
     ):
 
         character.transcript_path.write_text(
-            transcript,
-            encoding="utf-8",
+            transcript
         )
-
 
     def load_transcript(
         self,
         character: Character,
     ) -> str:
 
-        return character.transcript_path.read_text(
-            encoding="utf-8"
-        )
+        return character.transcript_path.read_text()
 
     #
     # Metadata
@@ -162,10 +118,8 @@ class CharacterStorage:
             json.dumps(
                 asdict(metadata),
                 indent=4,
-            ),
-            encoding="utf-8",
+            )
         )
-
 
     def load_metadata(
         self,
@@ -173,9 +127,9 @@ class CharacterStorage:
     ) -> CharacterMetadata:
 
         data = json.loads(
-            character.metadata_path.read_text(
-                encoding="utf-8"
-            )
+            character.metadata_path.read_text()
         )
 
-        return CharacterMetadata(**data)
+        return CharacterMetadata(
+            **data
+        )

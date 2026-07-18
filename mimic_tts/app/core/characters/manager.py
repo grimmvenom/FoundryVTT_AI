@@ -138,7 +138,8 @@ class CharacterManager:
         metadata = CharacterMetadata(
             name=name,
             source_audio=str(audio_path),
-            instructions=instructions,
+            personality="",
+            description="",
         )
 
         self.storage.save_transcript(
@@ -175,5 +176,21 @@ class CharacterManager:
     ):
 
         self.storage.delete(
+            name
+        )
+    
+
+    def get(
+        self,
+        name: str,
+    ):
+
+        if not self.exists(name):
+
+            raise FileNotFoundError(
+                f"Character not found: {name}"
+            )
+
+        return self.storage.load(
             name
         )

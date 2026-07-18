@@ -1,13 +1,10 @@
 from pathlib import Path
-import pytest
 
 from app.core.characters.models import (
     Character,
     CharacterMetadata,
     CreateCharacterResult,
 )
-# from app.core.characters.manager import CharacterManager
-# from app.core.characters.storage import CharacterStorage
 
 
 def test_character_dataclass():
@@ -15,13 +12,14 @@ def test_character_dataclass():
     character = Character(
         name="louise",
         directory=Path("/tmp/louise"),
-        voice_path=Path("/tmp/louise/voice.qvp"),
-        transcript_path=Path("/tmp/louise/transcript.txt"),
-        metadata_path=Path("/tmp/louise/metadata.json"),
     )
 
     assert character.name == "louise"
+    assert character.directory == Path("/tmp/louise")
+
     assert character.voice_path.name == "voice.qvp"
+    assert character.metadata_path.name == "metadata.json"
+    assert character.transcript_path.name == "transcript.txt"
 
 
 def test_character_metadata_defaults():
@@ -31,10 +29,28 @@ def test_character_metadata_defaults():
         source_audio="/tmp/audio.wav",
     )
 
-    assert metadata.version == 1
+    assert metadata.name == "louise"
+    assert metadata.source_audio == "/tmp/audio.wav"
+
+    assert metadata.personality == ""
+    assert metadata.description == ""
+
     assert metadata.voice_filename == "voice.qvp"
-    assert metadata.transcript_filename == "transcript.txt"
-    assert metadata.created_by == "mimic-tts"
+
+
+def test_character_metadata_custom_values():
+
+    metadata = CharacterMetadata(
+        name="louise",
+        source_audio="/tmp/audio.wav",
+        personality="Smart and sarcastic",
+        description="Child genius",
+        voice_filename="custom.qvp",
+    )
+
+    assert metadata.personality == "Smart and sarcastic"
+    assert metadata.description == "Child genius"
+    assert metadata.voice_filename == "custom.qvp"
 
 
 def test_create_character_result():
@@ -42,9 +58,6 @@ def test_create_character_result():
     character = Character(
         name="louise",
         directory=Path("/tmp/louise"),
-        voice_path=Path("/tmp/louise/voice.qvp"),
-        transcript_path=Path("/tmp/louise/transcript.txt"),
-        metadata_path=Path("/tmp/louise/metadata.json"),
     )
 
     result = CreateCharacterResult(
@@ -54,5 +67,3 @@ def test_create_character_result():
 
     assert result.character.name == "louise"
     assert result.transcript == "hello world"
-
-
