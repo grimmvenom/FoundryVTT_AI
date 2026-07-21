@@ -29,6 +29,7 @@ def create_character_command(args):
         name=args.name,
         audio_path=Path(args.audio),
         instructions=args.instructions,
+        overwrite=args.overwrite,
     )
 
     print()
@@ -38,6 +39,6 @@ def create_character_command(args):
 
     print()
     print(f"Name: {result.character.name}")
-    print(f"Voice Profile: {result.character.voice_path}")
+    print(f"Voice Profile: {result.character.prompt_path}")
     print(f"Transcript: {result.character.transcript_path}")
     print(f"Metadata: {result.character.metadata_path}")

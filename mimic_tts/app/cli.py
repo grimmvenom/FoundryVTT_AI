@@ -102,6 +102,11 @@ def main():
         )
     )
 
+    character_parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing character profile",
+    )
 
 
     #

@@ -98,7 +98,7 @@ def roleplay_command(
     #
 
     wav, sample_rate = (
-        manager.engine.generate_roleplay(
+        manager.generate_roleplay(
             character=character,
             text=script,
             instructions=args.instructions,

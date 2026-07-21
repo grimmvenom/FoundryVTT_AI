@@ -1,5 +1,19 @@
 # Qwen3-TTS
 
+## create_character → builds and stores a reusable voice clone prompt (voice_prompt.pt)
+"""
+python -m app.cli create-character \
+  --name test \
+  --audio tts_data/input/louise_voice_actor.wav \
+  --instructions "Energetic child voice with playful delivery"
+"""
+
+## roleplay → loads the cached prompt instead of regenerating it every time
+
+## generate_voice_clone() → can accept additional style/emotion instructions
+
+model selection stays controlled through .ini
+
 
 ## Resources:
 - [Qwen3 Workflow Examples](../qwen3_tts/output/workflows)
@@ -151,5 +165,66 @@ Saved transcript -> tts_data/output/transcribe_test.txt
 
 # TODO:
 - Add instructions for roleplay command
+- List Characters
 - Setup FAST API
 - Integrate as TTS
+
+
+
+Target workflow:
+
+create_character
+Input:
+- reference audio clip
+- transcript (Whisper)
+- optional personality/instructions
+
+Creates:
+/app/tts_data/characters/<name>/
+├── voice.qvp
+├── transcript.txt
+└── metadata.json
+
+roleplay
+- Loads character
+- Uses Base model
+- Builds:
+    - voice clone prompt from reference audio
+    - instruction prompt from personality/emotion/style
+- Generates:
+    - same voice
+    - different delivery
+
+
+
+                                 Character Creation
+                       |
+                       v
+          reference audio + transcript
+                       |
+                       v
+              create_voice_clone_prompt()
+                       |
+                       v
+              Save reusable voice profile
+                       |
+                       |
+                       v
+              Roleplay Generation
+                       |
+                       |
+          +------------+-------------+
+          |                          |
+          v                          v
+   Voice Clone Base             CustomVoice
+          |                          |
+          |                          |
+   cloned identity             style control
+          |                          |
+          +------------+-------------+
+                       |
+                       v
+             instructions/emotion
+                       |
+                       v
+                  output.wav

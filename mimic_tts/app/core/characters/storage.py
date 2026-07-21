@@ -3,14 +3,23 @@
 Summary:
 ######################################
 - Character filesystem access
+- Handles persistence of:
+    - metadata.json
+    - transcript.txt
+    - voice.pt
+    - voice_prompt.pt
 """
 
 from __future__ import annotations
 
 import json
 import shutil
-from pathlib import Path
+
 from dataclasses import asdict
+from pathlib import Path
+
+import torch
+
 from app.config import settings
 
 from .models import (
@@ -19,117 +28,354 @@ from .models import (
 )
 
 
+
 class CharacterStorage:
+    """
+    Handles all filesystem operations
+    related to character storage.
+
+    This class intentionally knows nothing
+    about Qwen or Whisper.
+
+    It only manages files.
+    """
+
+
 
     def __init__(
         self,
         root: Path | None = None,
     ):
+        """
+        Initialize character storage.
+
+        Args:
+            root:
+                Optional override directory.
+
+                Defaults to:
+                settings.characters_dir
+        """
 
         self.root = Path(
             root or settings.characters_dir
         )
 
+
+
+    ############################################################
     #
-    # Helpers
+    # Path Helpers
     #
+    ############################################################
+
 
     def character_path(
         self,
         name: str,
     ) -> Path:
+        """
+        Return filesystem directory
+        for a character.
+        """
 
         return self.root / name
 
+
+
+    ############################################################
     #
-    # CRUD
+    # Character CRUD
     #
+    ############################################################
+
 
     def create(
         self,
         name: str,
+        overwrite: bool = False,
     ) -> Character:
+        """
+        Create a new character directory.
+
+        Args:
+            name:
+                Character name.
+
+            overwrite:
+                Delete existing character
+                before recreating.
+
+        Returns:
+            Character object.
+        """
 
         directory = self.character_path(
             name
         )
 
+
+        if directory.exists():
+
+            if not overwrite:
+
+                raise FileExistsError(
+                    f"Character already exists: {name}"
+                )
+
+            shutil.rmtree(
+                directory
+            )
+
+
         directory.mkdir(
             parents=True,
-            exist_ok=False,
+            exist_ok=True,
         )
+
 
         return Character(
             name=name,
             directory=directory,
         )
 
+
+
     def exists(
         self,
         name: str,
     ) -> bool:
+        """
+        Check if character exists.
+        """
 
         return self.character_path(
             name
         ).exists()
 
+
+
     def delete(
         self,
         name: str,
-    ):
+    ) -> None:
+        """
+        Delete a character completely.
+        """
 
         shutil.rmtree(
             self.character_path(name),
             ignore_errors=True,
         )
 
+
+
+    def load(
+        self,
+        name: str,
+    ) -> Character:
+        """
+        Load character filesystem reference.
+        """
+
+        directory = self.character_path(
+            name
+        )
+
+
+        if not directory.exists():
+
+            raise FileNotFoundError(
+                f"Character not found: {name}"
+            )
+
+
+        return Character(
+            name=name,
+            directory=directory,
+        )
+
+
+
+    ############################################################
     #
-    # Transcript
+    # Transcript Handling
     #
+    ############################################################
+
 
     def save_transcript(
         self,
         character: Character,
         transcript: str,
-    ):
+    ) -> None:
+        """
+        Save Whisper transcript.
+        """
 
         character.transcript_path.write_text(
-            transcript
+            transcript,
+            encoding="utf-8",
         )
+
+
 
     def load_transcript(
         self,
         character: Character,
     ) -> str:
+        """
+        Load saved transcript.
+        """
 
-        return character.transcript_path.read_text()
+        return character.transcript_path.read_text(
+            encoding="utf-8"
+        )
 
+
+
+    ############################################################
     #
-    # Metadata
+    # Metadata Handling
     #
+    ############################################################
+
 
     def save_metadata(
         self,
         character: Character,
         metadata: CharacterMetadata,
-    ):
+    ) -> None:
+        """
+        Save character metadata.
+        """
 
         character.metadata_path.write_text(
+
             json.dumps(
                 asdict(metadata),
                 indent=4,
-            )
+            ),
+
+            encoding="utf-8",
         )
+
+
 
     def load_metadata(
         self,
         character: Character,
     ) -> CharacterMetadata:
+        """
+        Load character metadata.
+        """
 
         data = json.loads(
-            character.metadata_path.read_text()
+
+            character.metadata_path.read_text(
+                encoding="utf-8"
+            )
+
         )
+
 
         return CharacterMetadata(
             **data
+        )
+
+
+
+    ############################################################
+    #
+    # Voice Profile Handling
+    #
+    ############################################################
+
+
+    def save_voice_profile(
+        self,
+        character: Character,
+        source_path: Path,
+    ) -> None:
+        """
+        Save legacy voice profile.
+
+        This is metadata only.
+
+        The actual Qwen prompt is stored separately
+        in voice_prompt.pt.
+        """
+
+        shutil.copy2(
+            source_path,
+            character.voice_path,
+        )
+
+
+
+    def load_voice_profile(
+        self,
+        character: Character,
+    ) -> Path:
+        """
+        Return path to legacy voice profile.
+        """
+
+        return character.voice_path
+
+
+
+    ############################################################
+    #
+    # Qwen Voice Clone Prompt Handling
+    #
+    ############################################################
+
+
+    def save_voice_prompt(
+        self,
+        character: Character,
+        prompt,
+    ) -> None:
+        """
+        Save Qwen VoiceClonePromptItem data.
+
+        Stores:
+            - reference audio codes
+            - speaker embedding
+            - clone settings
+
+        This avoids recreating the prompt
+        on every generation.
+        """
+
+        torch.save(
+            prompt,
+            character.prompt_path,
+        )
+
+
+
+    def load_voice_prompt(
+        self,
+        character: Character,
+    ):
+        """
+        Load Qwen VoiceClonePromptItem data.
+
+        Returns:
+            List[VoiceClonePromptItem]
+        """
+
+        if not character.prompt_path.exists():
+
+            raise FileNotFoundError(
+                f"Missing voice prompt: {character.prompt_path}"
+            )
+
+
+        return torch.load(
+            character.prompt_path,
+            map_location="cpu",
+            weights_only=False,
         )
