@@ -7,14 +7,30 @@ from app.commands.roleplay import roleplay_command
 from app.core.characters.models import Character
 
 
-class FakeEngine:
+# ---------------------------------------------------------------------------
+# Fake Manager
+# ---------------------------------------------------------------------------
 
-    def __init__(self):
+class FakeManager:
+
+    def __init__(self, character):
+
+        self.character = character
 
         self.calls = []
 
+
+    def get(
+        self,
+        name,
+    ):
+
+        return self.character
+
+
     def generate_roleplay(
         self,
+        *,
         character,
         text,
         instructions=None,
@@ -30,11 +46,13 @@ class FakeEngine:
             }
         )
 
+
         # fake 1 second audio buffer
         audio = np.zeros(
             16000,
             dtype=np.float32,
         )
+
 
         return (
             audio,
@@ -42,19 +60,10 @@ class FakeEngine:
         )
 
 
-class FakeManager:
 
-    def __init__(self, character):
-
-        self.character = character
-        self.engine = FakeEngine()
-
-    def get(
-        self,
-        name,
-    ):
-
-        return self.character
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def make_args(
@@ -62,31 +71,56 @@ def make_args(
 ):
 
     defaults = {
+
         "character": "louise",
+
         "script": "Hello there",
+
         "script_file": None,
+
         "instructions": None,
-        "emotion": None,
+
+        "emotion": "neutral",
+
         "output": None,
     }
+
 
     defaults.update(
         kwargs
     )
+
 
     return SimpleNamespace(
         **defaults
     )
 
 
+
+def create_character(
+    tmp_path,
+):
+
+    return Character(
+
+        name="louise",
+
+        directory=tmp_path / "louise",
+    )
+
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+
 def test_roleplay_generates_audio(
     tmp_path,
-    monkeypatch,
 ):
-    
-    character = Character(
-        name="louise",
-        directory=tmp_path / "louise",
+
+    character = create_character(
+        tmp_path
     )
 
 
@@ -95,7 +129,9 @@ def test_roleplay_generates_audio(
     )
 
 
-    output = tmp_path / "test.wav"
+    output = (
+        tmp_path / "test.wav"
+    )
 
 
     args = make_args(
@@ -108,30 +144,33 @@ def test_roleplay_generates_audio(
         manager_factory=lambda: manager,
     )
 
+
     assert output.exists()
 
+
     assert len(
-        manager.engine.calls
+        manager.calls
     ) == 1
 
 
-    call = (
-        manager.engine.calls[0]
-    )
+
+    call = manager.calls[0]
+
+
+    assert call["character"] == character
 
     assert call["text"] == (
         "Hello there"
     )
 
 
+
 def test_roleplay_passes_instructions_and_emotion(
     tmp_path,
-    monkeypatch,
 ):
 
-    character = Character(
-        name="louise",
-        directory=tmp_path / "louise",
+    character = create_character(
+        tmp_path
     )
 
 
@@ -141,10 +180,13 @@ def test_roleplay_passes_instructions_and_emotion(
 
 
     args = make_args(
+
         instructions=(
             "Speak angrily"
         ),
+
         emotion="rage",
+
         output=str(
             tmp_path / "voice.wav"
         ),
@@ -156,37 +198,38 @@ def test_roleplay_passes_instructions_and_emotion(
         manager_factory=lambda: manager,
     )
 
-    call = (
-        manager.engine.calls[0]
-    )
+
+    call = manager.calls[0]
 
 
     assert call["instructions"] == (
         "Speak angrily"
     )
 
+
     assert call["emotion"] == (
         "rage"
     )
 
 
+
 def test_roleplay_reads_script_file(
     tmp_path,
-    monkeypatch,
 ):
 
     script_file = (
         tmp_path / "script.txt"
     )
 
+
     script_file.write_text(
         "A secret message"
     )
 
 
-    character = Character(
-        name="louise",
-        directory=tmp_path / "louise",
+
+    character = create_character(
+        tmp_path
     )
 
 
@@ -196,10 +239,13 @@ def test_roleplay_reads_script_file(
 
 
     args = make_args(
+
         script=None,
+
         script_file=str(
             script_file
         ),
+
         output=str(
             tmp_path / "voice.wav"
         ),
@@ -212,9 +258,7 @@ def test_roleplay_reads_script_file(
     )
 
 
-    call = (
-        manager.engine.calls[0]
-    )
+    call = manager.calls[0]
 
 
     assert call["text"] == (
@@ -222,13 +266,13 @@ def test_roleplay_reads_script_file(
     )
 
 
+
 def test_roleplay_requires_script(
     tmp_path,
 ):
 
-    character = Character(
-        name="louise",
-        directory=tmp_path / "louise",
+    character = create_character(
+        tmp_path
     )
 
 
@@ -249,9 +293,11 @@ def test_roleplay_requires_script(
             manager_factory=lambda: manager,
         )
 
+
         assert False, (
             "Expected ValueError"
         )
+
 
     except ValueError as e:
 

@@ -284,6 +284,25 @@ class CharacterStorage:
         )
 
 
+    def load_assets(
+        self,
+        character,
+    ):
+        """
+        Load all runtime character assets.
+
+        Returns:
+            (
+                CharacterMetadata,
+                VoiceClonePromptItem list
+            )
+        """
+
+        return (
+            self.load_metadata(character),
+            self.load_voice_prompt(character),
+        )
+
 
     ############################################################
     #

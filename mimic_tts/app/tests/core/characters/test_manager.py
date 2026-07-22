@@ -1,47 +1,117 @@
+from pathlib import Path
+
 from app.core.characters.manager import CharacterManager
 from app.core.characters.storage import CharacterStorage
+from app.core.characters.models import RoleplayRequest
+
+
+
+###########################################################################
+#
+# Fake Speech-To-Text
+#
+###########################################################################
 
 
 class FakeSpeechToText:
 
-    def __init__(self, transcript="hello there"):
+    def __init__(
+        self,
+        transcript="hello there",
+    ):
         self.transcript = transcript
         self.calls = []
 
-    def transcribe(self, audio):
-        self.calls.append(audio)
+
+    def transcribe(
+        self,
+        audio,
+    ):
+        self.calls.append(
+            audio
+        )
+
         return self.transcript
+
+
+
+###########################################################################
+#
+# Fake Qwen Engine
+#
+###########################################################################
 
 
 class FakeQwen:
 
     def __init__(self):
+
         self.loaded = False
+
         self.calls = []
 
+
+
     def load(self):
+
         self.loaded = True
 
-    def create_character(
+
+
+    def create_voice_clone_prompt(
         self,
         audio_path,
         transcript,
-        output_path,
-        instructions=None,
     ):
 
         self.calls.append(
-            {
-                "audio_path": audio_path,
-                "transcript": transcript,
-                "output_path": output_path,
-                "instructions": instructions,
-            }
+            (
+                "prompt",
+                audio_path,
+                transcript,
+            )
         )
 
-        output_path.write_text(
-            "fake qvp"
+
+        return [
+            "fake prompt"
+        ]
+
+
+
+    def generate_roleplay(
+        self,
+        text,
+        prompt,
+        metadata,
+        instructions="",
+        emotion="neutral",
+    ):
+
+        self.calls.append(
+            (
+                "roleplay",
+                text,
+                prompt,
+                metadata,
+                instructions,
+                emotion,
+            )
         )
+
+
+        return (
+            b"fake audio",
+            24000,
+        )
+
+
+
+###########################################################################
+#
+# Helper
+#
+###########################################################################
 
 
 def create_manager(
@@ -55,6 +125,7 @@ def create_manager(
 
     qwen = FakeQwen()
 
+
     manager = CharacterManager(
         storage=CharacterStorage(
             tmp_path
@@ -63,65 +134,147 @@ def create_manager(
         engine=qwen,
     )
 
-    return manager, stt, qwen
+
+    return (
+        manager,
+        stt,
+        qwen,
+    )
 
 
-def test_create_character_success(tmp_path):
+
+###########################################################################
+#
+# Character Creation
+#
+###########################################################################
+
+
+def test_create_character_success(
+    tmp_path,
+):
 
     manager, stt, qwen = create_manager(
         tmp_path
     )
 
+
     audio = tmp_path / "voice.wav"
+
     audio.touch()
+
+
 
     result = manager.create_character(
         name="louise",
         audio_path=audio,
     )
 
+
+
     assert result.character.name == "louise"
-    assert result.transcript == "hello there"
+
+    assert result.transcript == (
+        "hello there"
+    )
+
 
     assert qwen.loaded is True
+
+
     assert len(qwen.calls) == 1
 
+    assert qwen.calls[0][0] == (
+        "prompt"
+    )
 
-def test_create_character_saves_transcript(tmp_path):
+
+
+def test_create_character_calls_transcriber(
+    tmp_path,
+):
+
+    manager, stt, _ = create_manager(
+        tmp_path
+    )
+
+
+    audio = tmp_path / "voice.wav"
+
+    audio.touch()
+
+
+
+    manager.create_character(
+        name="louise",
+        audio_path=audio,
+    )
+
+
+
+    assert stt.calls == [
+        audio
+    ]
+
+
+
+def test_create_character_saves_transcript(
+    tmp_path,
+):
 
     manager, _, _ = create_manager(
         tmp_path
     )
 
+
     audio = tmp_path / "voice.wav"
+
     audio.touch()
+
+
 
     result = manager.create_character(
         name="louise",
         audio_path=audio,
     )
 
-    assert (
+
+
+    transcript = (
         manager.storage.load_transcript(
             result.character
         )
-        == "hello there"
     )
 
 
-def test_create_character_saves_metadata(tmp_path):
+    assert transcript == (
+        "hello there"
+    )
+
+
+
+def test_create_character_saves_metadata(
+    tmp_path,
+):
 
     manager, _, _ = create_manager(
         tmp_path
     )
 
+
     audio = tmp_path / "voice.wav"
+
     audio.touch()
+
+
 
     result = manager.create_character(
         name="louise",
         audio_path=audio,
+        instructions="Energetic child voice",
     )
+
+
 
     metadata = (
         manager.storage.load_metadata(
@@ -129,46 +282,177 @@ def test_create_character_saves_metadata(tmp_path):
         )
     )
 
-    assert metadata.source_audio == str(audio)
-    assert metadata.personality == ""
-    assert metadata.description == ""
 
 
-def test_engine_receives_parameters(tmp_path):
+    assert metadata.name == "louise"
 
-    manager, _, qwen = create_manager(
-        tmp_path
+    assert metadata.source_audio == str(
+        audio
     )
 
-    audio = tmp_path / "voice.wav"
-    audio.touch()
-
-    manager.create_character(
-        name="louise",
-        audio_path=audio,
-        instructions="Whispery child voice",
+    assert metadata.instructions == (
+        "Energetic child voice"
     )
 
-    call = qwen.calls[0]
-
-    assert call["audio_path"] == audio
-    assert call["transcript"] == "hello there"
-    assert call["instructions"] == "Whispery child voice"
 
 
-def test_create_character_creates_voice_profile(tmp_path):
+def test_create_character_saves_voice_prompt(
+    tmp_path,
+):
 
     manager, _, _ = create_manager(
         tmp_path
     )
 
+
     audio = tmp_path / "voice.wav"
+
     audio.touch()
+
+
 
     result = manager.create_character(
         name="louise",
         audio_path=audio,
     )
 
-    assert result.character.voice_path.exists()
-    assert result.character.voice_path.name == "voice.qvp"
+
+
+    prompt = (
+        manager.storage.load_voice_prompt(
+            result.character
+        )
+    )
+
+
+    assert prompt == [
+        "fake prompt"
+    ]
+
+
+
+    assert result.character.prompt_path.exists()
+
+
+
+def test_engine_receives_prompt_parameters(
+    tmp_path,
+):
+
+    manager, _, qwen = create_manager(
+        tmp_path
+    )
+
+
+    audio = tmp_path / "voice.wav"
+
+    audio.touch()
+
+
+
+    manager.create_character(
+        name="louise",
+        audio_path=audio,
+    )
+
+
+
+    call = qwen.calls[0]
+
+
+
+    assert call[0] == (
+        "prompt"
+    )
+
+
+    assert call[1] == audio
+
+
+    assert call[2] == (
+        "hello there"
+    )
+
+
+
+###########################################################################
+#
+# Roleplay
+#
+###########################################################################
+
+
+def test_generate_roleplay(
+    tmp_path,
+):
+
+    manager, _, qwen = create_manager(
+        tmp_path
+    )
+
+
+    audio = tmp_path / "voice.wav"
+
+    audio.touch()
+
+
+
+    result = manager.create_character(
+        name="louise",
+        audio_path=audio,
+    )
+
+
+
+    request = RoleplayRequest(
+
+        character=result.character,
+
+        text="Hello, I am Louise!",
+
+        instructions="Goofy and energetic",
+
+        emotion="excited",
+    )
+
+
+
+    audio_data, sample_rate = (
+        manager.generate_roleplay(
+            request
+        )
+    )
+
+
+
+    assert audio_data == (
+        b"fake audio"
+    )
+
+
+    assert sample_rate == 24000
+
+
+
+    call = qwen.calls[-1]
+
+
+
+    assert call[0] == (
+        "roleplay"
+    )
+
+
+    assert call[1] == (
+        "Hello, I am Louise!"
+    )
+
+
+    assert call[4] == (
+        "Goofy and energetic"
+    )
+
+
+    assert call[5] == (
+        "excited"
+    )
