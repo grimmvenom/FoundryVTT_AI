@@ -15,6 +15,10 @@ from app.core.audio.writer import (
     write_wav,
 )
 
+from app.core.characters.models import (
+    RoleplayRequest,
+)
+
 
 def roleplay_command(
     args,
@@ -94,15 +98,25 @@ def roleplay_command(
 
 
     #
+    # Build roleplay request
+    #
+
+    request = RoleplayRequest(
+        character=character,
+        text=script,
+        instructions=args.instructions or "",
+        emotion=args.emotion or "neutral",
+        output=output,
+    )
+
+
+    #
     # Generate audio
     #
 
     wav, sample_rate = (
         manager.generate_roleplay(
-            character=character,
-            text=script,
-            instructions=args.instructions,
-            emotion=args.emotion,
+            request
         )
     )
 

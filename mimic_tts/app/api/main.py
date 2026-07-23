@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import torch
 
-from .core.qwen3_engine import engine
+from ..core.qwen3_engine import engine
 
 
 app = FastAPI(

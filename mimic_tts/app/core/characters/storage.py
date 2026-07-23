@@ -17,6 +17,7 @@ import shutil
 
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 
 import torch
 
@@ -26,7 +27,6 @@ from .models import (
     Character,
     CharacterMetadata,
 )
-
 
 
 class CharacterStorage:
@@ -40,11 +40,9 @@ class CharacterStorage:
     It only manages files.
     """
 
-
-
     def __init__(
         self,
-        root: Path | None = None,
+        root: Path |None = None,
     ):
         """
         Initialize character storage.
@@ -61,14 +59,11 @@ class CharacterStorage:
             root or settings.characters_dir
         )
 
-
-
     ############################################################
     #
     # Path Helpers
     #
     ############################################################
-
 
     def character_path(
         self,
@@ -81,14 +76,11 @@ class CharacterStorage:
 
         return self.root / name
 
-
-
     ############################################################
     #
     # Character CRUD
     #
     ############################################################
-
 
     def create(
         self,
@@ -114,7 +106,6 @@ class CharacterStorage:
             name
         )
 
-
         if directory.exists():
 
             if not overwrite:
@@ -127,19 +118,15 @@ class CharacterStorage:
                 directory
             )
 
-
         directory.mkdir(
             parents=True,
             exist_ok=True,
         )
 
-
         return Character(
             name=name,
             directory=directory,
         )
-
-
 
     def exists(
         self,
@@ -151,9 +138,7 @@ class CharacterStorage:
 
         return self.character_path(
             name
-        ).exists()
-
-
+        ).is_dir()
 
     def delete(
         self,
@@ -168,8 +153,6 @@ class CharacterStorage:
             ignore_errors=True,
         )
 
-
-
     def load(
         self,
         name: str,
@@ -182,27 +165,47 @@ class CharacterStorage:
             name
         )
 
-
         if not directory.exists():
 
             raise FileNotFoundError(
                 f"Character not found: {name}"
             )
 
-
         return Character(
             name=name,
             directory=directory,
         )
 
+    def list(
+        self,
+    ) -> list[Character]:
+        """
+        Return all stored characters
+        sorted by name.
+        """
 
+        if not self.root.exists():
+            return []
+
+        characters = [
+            Character(
+                name=directory.name,
+                directory=directory,
+            )
+            for directory in self.root.iterdir()
+            if directory.is_dir()
+        ]
+
+        return sorted(
+            characters,
+            key=lambda c: c.name.lower(),
+        )
 
     ############################################################
     #
     # Transcript Handling
     #
     ############################################################
-
 
     def save_transcript(
         self,
@@ -218,8 +221,6 @@ class CharacterStorage:
             encoding="utf-8",
         )
 
-
-
     def load_transcript(
         self,
         character: Character,
@@ -229,17 +230,14 @@ class CharacterStorage:
         """
 
         return character.transcript_path.read_text(
-            encoding="utf-8"
+            encoding="utf-8",
         )
-
-
 
     ############################################################
     #
     # Metadata Handling
     #
     ############################################################
-
 
     def save_metadata(
         self,
@@ -251,16 +249,12 @@ class CharacterStorage:
         """
 
         character.metadata_path.write_text(
-
             json.dumps(
                 asdict(metadata),
                 indent=4,
             ),
-
             encoding="utf-8",
         )
-
-
 
     def load_metadata(
         self,
@@ -271,30 +265,29 @@ class CharacterStorage:
         """
 
         data = json.loads(
-
             character.metadata_path.read_text(
-                encoding="utf-8"
+                encoding="utf-8",
             )
-
         )
-
 
         return CharacterMetadata(
             **data
         )
 
-
     def load_assets(
         self,
-        character,
-    ):
+        character: Character,
+    ) -> tuple[
+        CharacterMetadata,
+        Any,
+    ]:
         """
         Load all runtime character assets.
 
         Returns:
             (
                 CharacterMetadata,
-                VoiceClonePromptItem list
+                VoiceClonePromptItem list,
             )
         """
 
@@ -303,13 +296,11 @@ class CharacterStorage:
             self.load_voice_prompt(character),
         )
 
-
     ############################################################
     #
     # Voice Profile Handling
     #
     ############################################################
-
 
     def save_voice_profile(
         self,
@@ -321,16 +312,14 @@ class CharacterStorage:
 
         This is metadata only.
 
-        The actual Qwen prompt is stored separately
-        in voice_prompt.pt.
+        The actual Qwen prompt is stored
+        separately in voice_prompt.pt.
         """
 
         shutil.copy2(
             source_path,
             character.voice_path,
         )
-
-
 
     def load_voice_profile(
         self,
@@ -342,19 +331,26 @@ class CharacterStorage:
 
         return character.voice_path
 
-
-
     ############################################################
     #
     # Qwen Voice Clone Prompt Handling
     #
     ############################################################
 
+    def has_voice_prompt(
+        self,
+        character: Character,
+    ) -> bool:
+        """
+        Check whether a cached voice prompt exists.
+        """
+
+        return character.prompt_path.exists()
 
     def save_voice_prompt(
         self,
         character: Character,
-        prompt,
+        prompt: Any,
     ) -> None:
         """
         Save Qwen VoiceClonePromptItem data.
@@ -373,12 +369,10 @@ class CharacterStorage:
             character.prompt_path,
         )
 
-
-
     def load_voice_prompt(
         self,
         character: Character,
-    ):
+    ) -> Any:
         """
         Load Qwen VoiceClonePromptItem data.
 
@@ -391,7 +385,6 @@ class CharacterStorage:
             raise FileNotFoundError(
                 f"Missing voice prompt: {character.prompt_path}"
             )
-
 
         return torch.load(
             character.prompt_path,

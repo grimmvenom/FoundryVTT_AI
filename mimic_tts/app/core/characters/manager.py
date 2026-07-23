@@ -15,38 +15,26 @@ This class does NOT contain:
 - filesystem details
 """
 
+from __future__ import annotations
 
 from pathlib import Path
 
-
 from app.core.characters.models import (
+    Character,
     CharacterMetadata,
     CreateCharacterResult,
     RoleplayRequest,
 )
-
 
 from app.core.characters.storage import (
     CharacterStorage,
 )
 
 
-from app.core.speech_to_text import (
-    SpeechToText,
-)
-
-
-from app.core.qwen3_engine import (
-    Qwen3Engine,
-)
-
-
-
 class CharacterManager:
     """
     Coordinates character workflows.
     """
-
 
     SUPPORTED_FORMATS = {
         ".wav",
@@ -55,7 +43,6 @@ class CharacterManager:
         ".flac",
         ".ogg",
     }
-
 
 
     def __init__(
@@ -70,21 +57,62 @@ class CharacterManager:
             or CharacterStorage()
         )
 
-        self.stt = (
-            speech_to_text
-            or SpeechToText()
-        )
+        #
+        # Lazy dependencies
+        #
+        # These are intentionally not created
+        # during manager initialization.
+        #
 
-        self.engine = (
-            engine
-            or Qwen3Engine()
-        )
+        self._stt = speech_to_text
+
+        self._engine = engine
 
 
 
+    ############################################################
+    #
+    # Lazy Services
+    #
+    ############################################################
+
+
+    @property
+    def stt(self):
+
+        if self._stt is None:
+
+            from app.core.speech_to_text import (
+                SpeechToText,
+            )
+
+            self._stt = SpeechToText()
+
+        return self._stt
+
+
+
+    @property
+    def engine(self):
+
+        if self._engine is None:
+
+            from app.core.qwen3_engine import (
+                Qwen3Engine,
+            )
+
+            self._engine = Qwen3Engine()
+
+        return self._engine
+
+
+
+    ############################################################
     #
     # Validation
     #
+    ############################################################
+
 
     def validate_audio(
         self,
@@ -115,9 +143,12 @@ class CharacterManager:
 
 
 
+    ############################################################
     #
-    # Character creation
+    # Character Creation
     #
+    ############################################################
+
 
     def create_character(
         self,
@@ -125,6 +156,8 @@ class CharacterManager:
         name: str,
         audio_path,
         instructions=None,
+        personality=None,
+        description=None,
         overwrite=False,
     ) -> CreateCharacterResult:
 
@@ -180,22 +213,27 @@ class CharacterManager:
 
         metadata = CharacterMetadata(
 
+            schema_version=1,
+
             name=name,
 
             source_audio=str(
-                audio_path
+                audio_path.resolve()
             ),
 
             instructions=(
                 instructions or ""
             ),
 
-            personality="",
+            personality=(
+                personality or ""
+            ),
 
-            description="",
+            description=(
+                description or ""
+            ),
         )
-
-
+        
         self.storage.save_metadata(
             character,
             metadata,
@@ -209,9 +247,28 @@ class CharacterManager:
 
 
 
+    ############################################################
     #
-    # Character helpers
+    # Character Listing
     #
+    ############################################################
+
+
+    def list(self) -> list[Character]:
+        """
+        Return all stored characters.
+        """
+
+        return self.storage.list()
+
+
+
+    ############################################################
+    #
+    # Character Helpers
+    #
+    ############################################################
+
 
     def exists(
         self,
@@ -236,7 +293,7 @@ class CharacterManager:
     def get(
         self,
         name: str,
-    ):
+    ) -> Character:
 
         if not self.exists(name):
 
@@ -251,9 +308,12 @@ class CharacterManager:
 
 
 
+    ############################################################
     #
     # Roleplay
     #
+    ############################################################
+
 
     def generate_roleplay(
         self,

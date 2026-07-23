@@ -191,7 +191,18 @@ class CharacterMetadata:
     - Future voice design workflows
     """
 
-    name: str
+    #
+    # Metadata schema
+    #
+
+    schema_version: int = 1
+
+
+    #
+    # Identity
+    #
+
+    name: str = ""
 
 
     #
@@ -224,8 +235,6 @@ class CharacterMetadata:
     #
 
     voice_filename: str = DEFAULT_VOICE_FILENAME
-
-
 
 ############################################################
 #

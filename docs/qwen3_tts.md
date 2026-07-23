@@ -1,19 +1,11 @@
 # Qwen3-TTS
 
-## create_character → builds and stores a reusable voice clone prompt (voice_prompt.pt)
-"""
-python -m app.cli create-character \
-  --name test \
-  --audio tts_data/input/louise_voice_actor.wav \
-  --instructions "Energetic child voice with playful delivery"
-"""
 
-## roleplay → loads the cached prompt instead of regenerating it every time
-
-## generate_voice_clone() → can accept additional style/emotion instructions
-
-model selection stays controlled through .ini
-
+# TODO:
+- [x] Add instructions for roleplay command
+- [x]List Characters
+- []Setup FAST API
+- [] Integrate as TTS
 
 ## Resources:
 - [Qwen3 Workflow Examples](../qwen3_tts/output/workflows)
@@ -25,118 +17,87 @@ model selection stays controlled through .ini
     - [ComfyUI-Whisper](https://github.com/yuvraj108c/ComfyUI-Whisper)
 
 
-## Build with Qwen3-TTS w/ Docker:
+## Project Structure:
+```
+config/
+├── default.ini
+├── mac.ini
+
+app/
+├── api/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI entrypoint
+│   ├── routes/
+│   │   ├── characters.py    # character endpoints
+│   │   ├── tts.py           # speech generation
+│   │   └── health.py
+│   └── schemas.py           # Pydantic models
+│
+├── core/
+│   ├── characters/
+|   |    ├── manager.py
+|   |    ├── models.py
+|   |    ├── storage.py
+│   ├── qwen3_engine.py
+│   ├── speech_to_text.py
+│   ├── transcribe.py
+│   └── ...
+│
+└── cli.py
+```
+
+
+## Running With Docker:
+
+### Build with Qwen3-TTS w/ Docker:
 ```
 docker compose -f qwen3-compose.yaml build --no-cache
 ```
 
-## Run w/ Docker Compose:
+### Run w/ Docker Compose:
 ```
 docker compose -f qwen3-compose.yaml up
 ```
 
-## Stop Docker Compose:
+### Stop Docker Compose:
 ```
 docker compose -f qwen3-compose.yaml down
 
 ```
 
+### Interactive Shell Into Docker Container:
+"""
+docker compose run --rm --entrypoint bash mimic-tts
+root@c6c10ae6b5b7:/app#
+"""
 
-## Intended Workflows & Endpoints:
+
+
+## Commandline Commands:
+
+### create_character → builds and stores a reusable voice clone prompt (voice_prompt.pt)
 - Add Audio File:
     - Description: Upload audio file for voice cloning / transcription
     - add a .wav or .mp3 audio file
     - Transcribe Audio using whisper
     - Save output to be reusable (.qvp file)
 - Generate TTS As Voice Profile (include instructions)
-    - Description: Identify a Voice Profile to use (.qvp), instructions (emotions may be separate from instructions), text 
+    - Description: Identify a Voice Profile to use (.pt), instructions (emotions may be separate from instructions), text 
     - save output as .wav file
+- Fields:
+    - instructions → how the voice should perform ("speak quickly", "whisper", "excited", "serious")
+    - personality → behavioral traits ("sarcastic", "kind", "mischievous")
+    - description → lore/context/background ("traveling bard from the northern kingdoms")
 
-
-app/
-├── core/
-│   ├── qwen3_engine.py       <-- Qwen3 model lifecycle
-│   ├── speech_to_text.py     <-- Whisper abstraction
-│   └── voice_profiles.py     <-- .qvp management later
-│
-├── commands/
-│   ├── clone.py              <-- CLI orchestration
-│   ├── transcribe.py
-│   └── generate.py
-
-
-| Current              | New                   | Purpose                                |
-| -------------------- | --------------------- | -------------------------------------- |
-| Voice Profile        | Character             | A reusable AI persona                  |
-| Create Voice Profile | Create Character      | Build a character from reference audio |
-| Generate TTS         | Roleplay              | Generate dialogue as a character       |
-| Voice Clone          | Character Voice Clone | The underlying Qwen mechanism          |
-| Voice Manager        | Character Manager     | Manages stored characters              |
-
-
-app/
-├── core/
-│   ├── character_manager.py      <-- Character lifecycle
-│   ├── qwen3_engine.py           <-- Qwen3 wrapper only
-│   ├── speech_to_text.py         <-- Whisper wrapper only
-│   ├── roleplay.py               <-- Generate speech as character
-│   └── characters/
-│       ├── models.py             <-- CharacterResult dataclasses
-│       └── storage.py            <-- Optional filesystem handling
-
-
-
-## Interactive Shell Into Docker Container:
 """
-docker compose run --rm --entrypoint bash mimic-tts
-root@c6c10ae6b5b7:/app#
-"""
-
-## Create a Reusable Character Profile / Voice Clone Using an Audio Clip
-"""
-root@c6c10ae6b5b7:/app# python -m app.cli create-character \
-    --audio tts_data/input/louise_voice_actor.wav \
-    --name test \
-    --instructions "Energetic child voice with playful delivery."
-
- 
-Loaded configuration: /app/config/default.ini
-
-============================================================
-Creating Character
-============================================================
-============================================================
-Loading Whisper
-============================================================
-Model:        large-v3
-Device:       cuda
-Compute type: float16
-Whisper loaded successfully
-Transcribing: tts_data/input/louise_voice_actor.wav
-
-============================================================
-Loading Qwen3-TTS
-============================================================
-/opt/conda/lib/python3.11/site-packages/torch/cuda/__init__.py:716: UserWarning: Can't initialize NVML
-  warnings.warn("Can't initialize NVML")
-Qwen3-TTS loaded successfully
-
-Character profile created:
-/app/tts_data/characters/test/voice.qvp
-
-============================================================
-Character Created
-============================================================
-
-Name: test
-Voice Profile: /app/tts_data/characters/test/voice.qvp
-Transcript: /app/tts_data/characters/test/transcript.txt
-Metadata: /app/tts_data/characters/test/metadata.json
-
+python -m app.cli create-character \
+  --name test \
+  --audio tts_data/input/louise_voice_actor.wav \
+  --instructions "Energetic child voice with playful delivery"
 """
 
 
-# Transcribe An Audio File -> Text
+## Transcribe An Audio File -> Text
 """
 root@c6c10ae6b5b7:/app# python -m app.cli transcribe --audio tts_data/input/louise_voice_actor.wav --output tts_data/output/transcribe_test.txt
 
@@ -163,17 +124,10 @@ Saved transcript -> tts_data/output/transcribe_test.txt
 """
 
 
-# TODO:
-- Add instructions for roleplay command
-- List Characters
-- Setup FAST API
-- Integrate as TTS
+### Character
 
-
-
-Target workflow:
-
-create_character
+#### Create a Reusable Character Profile / Voice Clone Using an Audio Clip
+- to Overwrite an existing character use the `--overwrite` flag.
 Input:
 - reference audio clip
 - transcript (Whisper)
@@ -181,11 +135,51 @@ Input:
 
 Creates:
 /app/tts_data/characters/<name>/
-├── voice.qvp
+├── voice.pt
 ├── transcript.txt
 └── metadata.json
 
-roleplay
+"""
+root@74b4bffe85ee:/app# python -m app.cli characters create \
+    --name louise \
+    --audio tts_data/input/louise_voice_actor.wav \
+    --instructions "Energetic, sarcastic, curious child genius with a playful tone"
+Loaded configuration: /app/config/default.ini
+
+============================================================
+Creating Character
+============================================================
+============================================================
+Loading Whisper
+============================================================
+Model:        large-v3
+Device:       cuda
+Compute type: float16
+Whisper loaded successfully
+Transcribing: tts_data/input/louise_voice_actor.wav
+
+============================================================
+Loading Qwen3-TTS
+============================================================
+Mode: clone
+Qwen3-TTS loaded successfully
+
+============================================================
+Creating Voice Clone Prompt
+============================================================
+Voice clone prompt created
+
+============================================================
+Character Created
+============================================================
+
+Name: louise
+Voice Profile: /app/tts_data/characters/louise/voice.pt
+Transcript: /app/tts_data/characters/louise/transcript.txt
+Metadata: /app/tts_data/characters/louise/metadata.json
+"""
+
+### roleplay
 - Loads character
 - Uses Base model
 - Builds:

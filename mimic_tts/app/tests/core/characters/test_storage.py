@@ -64,6 +64,43 @@ def test_create_overwrite(tmp_path):
     ).exists()
 
 
+def test_list_characters(tmp_path):
+
+    storage = CharacterStorage(tmp_path)
+
+    storage.create("zelda")
+    storage.create("louise")
+    storage.create("Bob")
+
+    # Should ignore regular files.
+    (tmp_path / "README.txt").write_text(
+        "not a character"
+    )
+
+    characters = storage.list()
+
+    assert [
+        character.name
+        for character in characters
+    ] == [
+        "Bob",
+        "louise",
+        "zelda",
+    ]
+
+    assert all(
+        character.directory.is_dir()
+        for character in characters
+    )
+
+
+def test_list_characters_empty(tmp_path):
+
+    storage = CharacterStorage(tmp_path)
+
+    assert storage.list() == []
+
+
 ###########################################################################
 #
 # Transcript
