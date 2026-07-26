@@ -1,3 +1,10 @@
 ollama_storage/*
-open-webui-data/*
+open_webui_data/*
 training_data/foundry/*
+mimic_tts/tts_data
+
+__pycache__/
+
+training_data/voices
+training_data/tts_data
+.venv

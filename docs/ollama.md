@@ -122,7 +122,6 @@ Most Foundry AI modules (like **RPGX AI Assistant** or **UnKenny**) allow you to
     
     - **Preamble/Prompt Example:** _"You are Kaelen, a nervous elven alchemist. You stutter when you lie and you are obsessed with rare mushrooms. You refuse to talk about the local Baron."_
         
-
 ---
 
 ## 3. Recommended "Dials and Knobs"

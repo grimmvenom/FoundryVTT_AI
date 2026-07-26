@@ -1,0 +1,30 @@
+{
+  "voices": {
+    "jester": {
+      "name": "Jester",
+      "description": "Female Tiefling from the might nein - playful and mischievous",
+      "preview_text": "oh hi there. sorry to bother you. Are you pooping?",
+      "gender": "female",
+      "language": "en-US",
+      "accent": "neutral"
+    },
+    "louise": {
+      "name": "Louise",
+      "description": "Louise Belcher character voice - confident and sarcastic",
+      "preview_text": "This burgers really pop, you know?",
+      "gender": "female",
+      "language": "en-US",
+      "accent": "neutral"
+    },
+    "molly": {
+      "name": "Molly",
+      "description": "Molly character voice - warm and thoughtful",
+      "preview_text": "Let's talk about this adventure",
+      "gender": "male",
+      "language": "en-US",
+      "accent": "neutral"
+    }
+  },
+  "default_voice": "jester",
+  "version": "1.0"
+}

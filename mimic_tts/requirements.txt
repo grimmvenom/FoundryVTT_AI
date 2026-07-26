@@ -1,0 +1,30 @@
+# API
+fastapi
+uvicorn[standard]
+pytest
+
+# Whisper transcription
+faster-whisper
+
+# Hugging Face
+transformers==4.57.3
+accelerate>=1.0.0
+huggingface_hub
+safetensors
+hf_transfer
+
+# Qwen3-TTS
+qwen-tts
+
+# Audio utilities
+soundfile
+librosa
+
+# Math / model utilities
+numpy<2
+einops
+
+# API helpers
+python-multipart
+tqdm
+ffmpeg-python
