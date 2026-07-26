@@ -19,6 +19,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
+RUN apt-get install -y \
+    yt-dlp \
+    vlc
+
 #
 # Python dependencies
 #

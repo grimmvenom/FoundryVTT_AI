@@ -466,3 +466,6 @@ class Qwen3Engine:
     def is_loaded(self):
 
         return self.loaded
+
+
+engine = Qwen3Engine()

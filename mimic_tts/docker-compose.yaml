@@ -17,11 +17,11 @@ services:
       - ./app:/app/app
       - ./config:/app/config
       # Persistent model/data storage
-      - ./tts_data/cache:/root/.cache/huggingface
-      - ./tts_data/models:/app/models
-      - ./tts_data/characters:/app/tts_data/characters
-      - ./tts_data/input:/app/tts_data/input
-      - ./tts_data/output:/app/tts_data/output
+      - ../training_data/tts_data/cache:/root/.cache/huggingface
+      - ../training_data/tts_data/models:/app/models
+      - ../training_data/tts_data/characters:/app/tts_data/characters
+      - ../training_data/tts_data/input:/app/tts_data/input
+      - ../training_data/tts_data/output:/app/tts_data/output
     environment:
       MIMIC_CONFIG: /app/config/default.ini
       HF_HOME: /root/.cache/huggingface
