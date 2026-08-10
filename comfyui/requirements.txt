@@ -1,0 +1,111 @@
+# ============================================================================
+# PyTorch
+#
+# ComfyUI currently recommends the stable CUDA 13.0 PyTorch wheels for
+# NVIDIA systems.
+#
+# NVIDIA GPU access itself is provided by the host through the NVIDIA
+# Container Toolkit; the Docker image does not require an NVIDIA CUDA base
+# image.
+# ============================================================================
+
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+torch
+torchsde
+torchvision
+torchaudio
+
+
+# ============================================================================
+# ComfyUI
+#
+# Based on the current upstream ComfyUI requirements.
+# ============================================================================
+
+comfyui-frontend-package==1.48.7
+comfyui-workflow-templates==0.11.37
+comfyui-embedded-docs==0.5.9
+
+numpy>=1.25.0
+einops
+transformers>=4.50.3
+tokenizers>=0.13.3
+sentencepiece
+safetensors>=0.4.2
+
+aiohttp>=3.11.8
+yarl>=1.18.0
+pyyaml
+Pillow
+scipy
+tqdm
+psutil
+
+alembic
+SQLAlchemy>=2.0.0
+filelock
+av>=16.0.0
+
+comfy-kitchen==0.2.28
+comfy-aimdo==0.4.13
+
+requests
+simpleeval>=1.0.0
+blake3
+
+kornia>=0.7.1
+spandrel
+pydantic~=2.0
+pydantic-settings~=2.0
+PyOpenGL>=3.1.8
+comfy-angle
+
+
+# ============================================================================
+# ComfyUI Manager
+#
+# Based on the current upstream Manager requirements.
+# ============================================================================
+
+GitPython
+PyGithub
+matrix-nio
+typer
+rich
+typing-extensions
+toml
+uv
+chardet
+
+
+# ============================================================================
+# Qwen3-TTS
+#
+# Based on the current ComfyUI-Qwen3-TTS requirements.
+# ============================================================================
+
+librosa>=0.10.0
+soundfile>=0.12.0
+accelerate>=0.20.0
+tiktoken>=0.5.0
+onnxruntime
+sox
+huggingface-hub>=0.16.0
+
+
+# ============================================================================
+# Faster Whisper
+#
+# Based on the current faster-whisper requirements.
+# ============================================================================
+
+ctranslate2>=4.0,<5
+onnxruntime>=1.14,<2
+
+
+# ============================================================================
+# ComfyUI CLI
+# ============================================================================
+
+comfy-cli

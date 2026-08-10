@@ -4,7 +4,7 @@
 #
 
 # Target the directory containing your actors
-ACTOR_DIR="../../training_data/foundry/actors/raw_data"
+ACTOR_DIR="../../ai_data/foundry/actors/raw_data"
 
 # Ensure the output directory exists
 mkdir -p $ACTOR_DIR

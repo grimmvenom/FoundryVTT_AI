@@ -298,18 +298,27 @@ class Qwen3Engine:
 
 
 
-        wavs, sample_rate = (
-            self.model.generate_voice_clone(
-                text=text,
-                language="English",
-                voice_clone_prompt=prompt,
-                **kwargs,
-            )
+        wavs, sample_rate = self.model.generate_voice_clone(
+            text=text,
+            language="English",
+            voice_clone_prompt=prompt,
+            **kwargs,
         )
 
+        print("\n========== Qwen Debug ==========")
+        print("Returned:", type(wavs))
+        print("Number of wavs:", len(wavs))
+
+        for i, wav in enumerate(wavs):
+            try:
+                print(f"WAV {i}: shape={wav.shape}")
+            except Exception:
+                print(f"WAV {i}: len={len(wav)}")
+
+        print("===============================\n")
 
         return (
-            wavs[0],
+            wavs[-1],
             sample_rate,
         )
 

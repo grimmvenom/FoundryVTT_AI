@@ -76,7 +76,7 @@ services:
     volumes:
       # Change /app/data to /app/backend/data
       - ./open_webui_data:/app/backend/data
-      - ./training_data/foundry:/foundry_lore:ro
+      - ./ai_data/foundry:/foundry_lore:ro
     depends_on:
       - ollama
       - kokoro-tts

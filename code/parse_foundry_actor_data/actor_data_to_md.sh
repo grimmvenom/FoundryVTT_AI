@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Target the directory containing your actors
-ACTOR_DIR="../../training_data/foundry/actors/raw_data"
+ACTOR_DIR="../../ai_data/foundry/actors/raw_data"
 
 # Loop recursively through all .json files in the actors directory
 find "$ACTOR_DIR" -type f -name "*.json" | while read -r file; do

@@ -1,4 +1,4 @@
-../training_data/tts_data/
+../ai_data/tts_data/
 config/
 .env
 
