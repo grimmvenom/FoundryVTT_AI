@@ -1,7 +1,9 @@
-ollama_storage/*
-open_webui_data/*
-ai_data/foundry/*
+ai_data
+ai_data/ollama_storage
+ai_data/open_webui_data
+ai_data/foundry
 ai_data/tts_data
+ai_data/comfyui
 
 __pycache__/
 .venv

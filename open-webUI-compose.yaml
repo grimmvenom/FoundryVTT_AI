@@ -22,7 +22,7 @@ services:
     ports:
       - "0.0.0.0:11434:11434" # Explicitly binds to all network interfaces
     volumes:
-      - ./ollama_storage:/root/.ollama
+      - ai_data/ollama_storage:/root/.ollama
     deploy:
       resources:
         reservations:
@@ -75,8 +75,8 @@ services:
       - 'DOCS_DIR=/foundry_lore'     # Key for directory sync
     volumes:
       # Change /app/data to /app/backend/data
-      - ./open_webui_data:/app/backend/data
-      - ./ai_data/foundry:/foundry_lore:ro
+      - ai_data/open_webui_data:/app/backend/data
+      - ai_data/foundry:/foundry_lore:ro
     depends_on:
       - ollama
       - kokoro-tts

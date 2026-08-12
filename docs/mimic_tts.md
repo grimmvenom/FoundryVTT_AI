@@ -57,664 +57,985 @@ The primary API base URL is: [http://localhost:8188](http://localhost:8188)
 When accessed from another Docker container on the same Docker network: [http://mimic-tts:8000](http://mimic-tts:8000)
 
 
+# Mimic-TTS API
 
----
+Mimic-TTS provides a Qwen3-TTS based voice-cloning API with OpenAI-compatible speech generation, reusable character profiles, character management, and an explicit roleplay endpoint.
 
-# API Authentication
+## Base URL
 
-The current API does not enforce authentication.
-
-Open WebUI may still send an API key such as:
+Examples below assume:
 
 ```text
-Authorization: Bearer mimic
-```
-
-The current Mimic TTS API accepts the request regardless of the bearer token.
-
-This is suitable for a trusted local Docker network.
-
-If the API is exposed outside the trusted network, authentication should be added.
-
----
-
-# Health Check
-
-## `GET /`
-
-Returns service information.
-
-Example:
-
-```bash
-curl http://localhost:8188/
-```
-
-Example response:
-
-```json
-{
-    "service": "mimic-tts",
-    "status": "running",
-    "model_loaded": true,
-    "cuda": true,
-    "gpu": "NVIDIA GPU"
-}
+http://mimic-tts:8000
 ```
 
 ---
 
-## `GET /health`
-
-Returns a basic health status.
-
-```bash
-curl http://localhost:8188/health
-```
-
-Example response:
-
-```json
-{
-    "status": "ok",
-    "model_loaded": true
-}
-```
-
----
-
-# List Available Voices
-
-## `GET /v1/voices`
-
-Returns all stored character voices.
-
-```bash
-curl http://localhost:8188/v1/voices
-```
-
-Example response:
-
-```json
-{
-    "object": "list",
-    "data": [
-        {
-            "id": "jester",
-            "name": "Jester",
-            "object": "voice",
-            "description": "Female Tiefling from the might nein - playful and mischievous",
-            "language": "en-US",
-            "gender": "female"
-        },
-        {
-            "id": "louise",
-            "name": "Louise",
-            "object": "voice",
-            "description": "Louise Belcher character voice - confident and sarcastic",
-            "language": "en-US",
-            "gender": "female"
-        },
-        {
-            "id": "molly",
-            "name": "Molly",
-            "object": "voice",
-            "description": "Molly character voice - warm and thoughtful",
-            "language": "en-US",
-            "gender": "male"
-        }
-    ]
-}
-```
-
-The available voices are determined from stored characters.
-
-Voice metadata may optionally be provided through:
-
-```text
-config/voices.json
-```
-
----
-
-# Voice Endpoint Aliases
-
-The following endpoints return the same voice information:
-
-```text
-GET /v1/voices
-GET /v1/audio/voices
-GET /voices
-```
-
-The recommended endpoint is:
-
-```text
-GET /v1/voices
-```
-
----
-
-# List Models
-
-## `GET /v1/models`
-
-Returns available character voices as models.
-
-```bash
-curl http://localhost:8188/v1/models
-```
-
-Example response:
-
-```json
-{
-    "object": "list",
-    "data": [
-        {
-            "id": "jester",
-            "object": "model",
-            "owned_by": "mimic-tts"
-        },
-        {
-            "id": "louise",
-            "object": "model",
-            "owned_by": "mimic-tts"
-        },
-        {
-            "id": "molly",
-            "object": "model",
-            "owned_by": "mimic-tts"
-        }
-    ]
-}
-```
-
-Alias:
-
-```text
-GET /models
-```
-
----
-
-# Text-to-Speech
-
-## `POST /v1/audio/speech`
-
-This is the primary OpenAI-compatible TTS endpoint.
-
-It is compatible with clients that support the OpenAI-style speech API.
-
-Example:
-
-```bash
-curl \
-  -X POST \
-  http://localhost:8188/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mimic" \
-  -d '{
-    "model": "mimic-tts",
-    "voice": "jester",
-    "input": "Hello there! How are you doing today?"
-  }' \
-  --output /tmp/test.wav
-```
-
-The generated audio is returned directly as a WAV file.
-
----
-
-# TTS Request Fields
-
-The API accepts the following JSON fields:
-
-| Field | Type | Description |
-|---|---|---|
-| `input` | string | Primary text to synthesize |
-| `text` | string | Alternative text field |
-| `model` | string | Model name or voice alias |
-| `voice` | string | Character / voice name |
-| `character` | string | Stored character name |
-| `speaker` | string | Alternative character selector |
-| `instructions` | string | Temporary voice performance instructions |
-| `emotion` | string | Requested emotion |
-| `response_format` | string | Output format; currently only `wav` is supported |
-
----
-
-# Character Selection
-
-The API resolves the character in the following order:
-
-```text
-character
-    ↓
-voice
-    ↓
-speaker
-    ↓
-model
-```
-
-For example, these are all valid character selectors:
-
-```json
-{
-    "input": "Hello!",
-    "character": "jester"
-}
-```
-
-```json
-{
-    "input": "Hello!",
-    "voice": "jester"
-}
-```
-
-```json
-{
-    "input": "Hello!",
-    "speaker": "jester"
-}
-```
-
-```json
-{
-    "input": "Hello!",
-    "model": "jester"
-}
-```
-
-For OpenAI-compatible clients, the recommended format is:
-
-```json
-{
-    "model": "mimic-tts",
-    "voice": "jester",
-    "input": "Hello!"
-}
-```
-
----
-
-# Roleplay TTS
-
-## `POST /tts/roleplay`
-
-The roleplay endpoint uses the stored character voice and supports additional performance controls.
-
-Example:
-
-```bash
-curl \
-  -X POST \
-  http://localhost:8188/tts/roleplay \
-  -H "Content-Type: application/json" \
-  -d '{
-    "character": "molly",
-    "input": "How are you doing, lass? Been a while since our last fight.",
-    "instructions": "Concerned and sympathetic",
-    "emotion": "happy"
-  }' \
-  --output /tmp/molly.wav
-```
-
-The result is returned as:
-
-```text
-audio/wav
-```
-
----
-
-# TTS Endpoint Alias
-
-The following endpoints provide speech synthesis:
-
-```text
-POST /tts/speech
-POST /v1/audio/speech
-```
-
-The recommended endpoint for external clients is:
-
-```text
-POST /v1/audio/speech
-```
-
----
-
-# Output Format
-
-The API currently supports:
-
-```text
-wav
-```
-
-The response MIME type is:
-
-```text
-audio/wav
-```
-
-Other formats such as:
-
-```text
-mp3
-opus
-flac
-```
-
-are not currently supported by the API endpoint.
-
-Requests using an unsupported format return HTTP 400.
-
----
-
-# Open WebUI Integration
-
-Mimic TTS can be configured as an OpenAI-compatible TTS provider.
-
-In Docker, Open WebUI connects to Mimic TTS using the internal Docker hostname:
-
-```text
-http://mimic-tts:8000/v1
-```
-
-Example Open WebUI environment configuration:
-
-```yaml
-environment:
-  - 'OLLAMA_BASE_URL=http://ollama:11434'
-
-  - 'AUDIO_TTS_ENGINE=openai'
-  - 'AUDIO_TTS_OPENAI_API_BASE_URL=http://mimic-tts:8000/v1'
-  - 'AUDIO_TTS_OPENAI_API_KEY=mimic'
-  - 'AUDIO_TTS_MODEL=mimic-tts'
-  - 'AUDIO_TTS_VOICE=jester'
-```
-
-Available voices can be changed by modifying:
-
-```yaml
-- 'AUDIO_TTS_VOICE=jester'
-```
-
-For example:
-
-```yaml
-- 'AUDIO_TTS_VOICE=louise'
-```
-
-or:
-
-```yaml
-- 'AUDIO_TTS_VOICE=molly'
-```
-
-After changing the Docker Compose configuration, restart Open WebUI:
-
-```bash
-docker compose up -d open-webui
-```
-
----
-
-# Open WebUI TTS Request
-
-Open WebUI sends an OpenAI-compatible request similar to:
-
-```json
-{
-    "model": "mimic-tts",
-    "voice": "jester",
-    "input": "Hello there!"
-}
-```
-
-Mimic TTS resolves:
-
-```text
-voice = jester
-```
-
-to the stored character:
-
-```text
-tts_data/characters/jester/
-```
-
-and generates speech using the cached Qwen voice clone prompt.
-
----
-
-# Foundry VTT Integration
-
-Mimic TTS can be called from Foundry VTT macros.
-
-The API is available to Foundry using the host machine's network address.
-
-Example:
-
-```text
-http://192.168.7.XXX:8188
-```
-
-Replace the IP address with the address of the machine running Mimic TTS.
-
----
-
-# [Foundry VTT TTS Macro](../code/Mimic_TTS.js)
-
-
-
-
-# API Fallback Behavior
-
-The API contains a fallback mechanism for some runtime failures.
-
-If an unknown character is requested, Mimic TTS can generate fallback audio instead of immediately failing.
-
-If a CUDA or GPU memory error occurs, the API can also return fallback audio.
-
-This fallback behavior is primarily intended to prevent Open WebUI or other clients from crashing when TTS generation fails.
-
-The fallback audio is a simple generated waveform and is not intended to replace real Qwen3-TTS output.
-
----
-
-# Recommended Runtime Architecture
-
-For normal operation:
-
-```text
-                    Ollama
-                      |
-                      |
-                      v
-                 Open WebUI
-                      |
-                      | TTS Request
-                      v
-                Mimic TTS API
-                      |
-                      v
-             CharacterManager
-                      |
-                      +----------------+
-                      |                |
-                      v                v
-               Character Data    Qwen3-TTS Engine
-                      |                |
-                      +-------+--------+
-                              |
-                              v
-                          WAV Audio
-```
-
-Foundry VTT can independently call the same API:
-
-```text
-Foundry VTT
-     |
-     | POST /v1/audio/speech
-     v
-Mimic TTS API
-     |
-     v
-Qwen3-TTS
-     |
-     v
-WAV Audio
-     |
-     v
-Foundry AudioHelper
-```
-
----
-
-# Current API Endpoints
+# Endpoint Summary
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `GET` | `/` | Service status |
 | `GET` | `/health` | Health check |
-| `GET` | `/voices` | List voices |
-| `GET` | `/v1/voices` | List voices |
-| `GET` | `/v1/audio/voices` | List voices |
-| `GET` | `/models` | List character models |
-| `GET` | `/v1/models` | List character models |
-| `POST` | `/tts/speech` | Generate speech |
+| `GET` | `/v1/models` | List available models |
+| `GET` | `/models` | Alias for `/v1/models` |
+| `GET` | `/v1/voices` | List character voices |
+| `GET` | `/v1/audio/voices` | Alias for `/v1/voices` |
+| `GET` | `/voices` | Alias for `/v1/voices` |
+| `POST` | `/v1/characters` | Create a character |
+| `POST` | `/characters` | Alias for character creation |
+| `PUT` | `/v1/characters/{name}` | Update a character |
+| `PUT` | `/characters/{name}` | Alias for character update |
 | `POST` | `/v1/audio/speech` | OpenAI-compatible speech generation |
-| `POST` | `/tts/roleplay` | Generate roleplay speech |
+| `POST` | `/tts/speech` | Alias for speech generation |
+| `POST` | `/v1/roleplay` | Generate character roleplay speech |
+| `POST` | `/roleplay` | Alias for roleplay |
+| `POST` | `/tts/roleplay` | Alias for roleplay |
 
-The recommended API endpoints for integrations are:
+---
+
+# 1. Service Status
+
+## `GET /`
+
+Returns general service and model status.
+
+### Example
+
+```bash
+curl http://mimic-tts:8000/
+```
+
+### Response
+
+```json
+{
+  "service": "mimic-tts",
+  "status": "running",
+  "model": "mimic-tts",
+  "model_loaded": true,
+  "cuda": true,
+  "gpu": "..."
+}
+```
+
+### Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `service` | string | Service name |
+| `status` | string | Service status |
+| `model` | string | Active model identifier |
+| `model_loaded` | boolean | Whether Qwen3-TTS is loaded |
+| `cuda` | boolean | Whether CUDA is available |
+| `gpu` | string/null | CUDA GPU name, if available |
+
+---
+
+# 2. Health Check
+
+## `GET /health`
+
+Simple health check.
+
+### Example
+
+```bash
+curl http://mimic-tts:8000/health
+```
+
+### Response
+
+```json
+{
+  "status": "ok",
+  "model_loaded": true
+}
+```
+
+---
+
+# 3. List Models
+
+## `GET /v1/models`
+
+OpenAI-compatible model listing.
+
+### Alias
 
 ```text
-GET  /v1/voices
+GET /models
+```
+
+### Example
+
+```bash
+curl http://mimic-tts:8000/v1/models
+```
+
+### Response
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "mimic-tts",
+      "object": "model",
+      "owned_by": "mimic-tts"
+    }
+  ]
+}
+```
+
+---
+
+# 4. List Voices
+
+## `GET /v1/voices`
+
+Returns the stored character voices.
+
+### Aliases
+
+```text
+GET /v1/audio/voices
+GET /voices
+```
+
+### Example
+
+```bash
+curl http://mimic-tts:8000/v1/voices
+```
+
+### Response
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "eira",
+      "name": "Eira",
+      "object": "voice",
+      "description": "Eira character voice",
+      "language": "en-US",
+      "gender": "unknown"
+    }
+  ]
+}
+```
+
+### Voice Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Character name used when generating speech |
+| `name` | string | Display name |
+| `object` | string | Always `voice` |
+| `description` | string | Voice description |
+| `language` | string | Voice language |
+| `gender` | string | Configured gender, or `unknown` |
+
+Voice display information can be customized through the optional `voices.json` configuration.
+
+---
+
+# 5. Create Character
+
+## `POST /v1/characters`
+
+Creates a reusable voice-cloned character.
+
+### Alias
+
+```text
+POST /characters
+```
+
+### Content Type
+
+```text
+multipart/form-data
+```
+
+### Form Fields
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | Yes | Character name |
+| `audio` | file | Yes | Reference voice audio |
+| `instructions` | string | No | Default voice/performance instructions |
+| `personality` | string | No | Character personality |
+| `description` | string | No | Character description |
+| `overwrite` | boolean | No | Replace an existing character with the same name |
+
+### Supported Audio Formats
+
+```text
+.wav
+.mp3
+.m4a
+.flac
+.ogg
+```
+
+### Example
+
+```bash
+curl -X POST \
+  http://mimic-tts:8000/v1/characters \
+  -F "name=eira" \
+  -F "audio=@eira_reference.wav" \
+  -F "instructions=Speak naturally and warmly." \
+  -F "personality=Calm, thoughtful, and curious." \
+  -F "description=A fantasy character with a warm voice." \
+  -F "overwrite=false"
+```
+
+### Processing
+
+Character creation performs the following operations:
+
+1. Validates the character name.
+2. Validates the audio file.
+3. Transcribes the reference audio with Whisper.
+4. Loads Qwen3-TTS.
+5. Creates a native Qwen voice-clone prompt.
+6. Saves the voice-clone prompt.
+7. Saves the transcript.
+8. Saves character metadata.
+
+### Successful Response
+
+HTTP status:
+
+```text
+201 Created
+```
+
+Example:
+
+```json
+{
+  "success": true,
+  "character": {
+    "name": "eira"
+  },
+  "transcript": "This is the reference recording...",
+  "files": {
+    "metadata": ".../metadata.json",
+    "transcript": ".../transcript.txt",
+    "voice_prompt": ".../voice_prompt.pt"
+  }
+}
+```
+
+### Errors
+
+#### Empty name
+
+```text
+400 Bad Request
+```
+
+#### Unsupported audio format
+
+```text
+400 Bad Request
+```
+
+#### Existing character with overwrite disabled
+
+```text
+409 Conflict
+```
+
+#### Other creation failure
+
+```text
+500 Internal Server Error
+```
+
+---
+
+# 6. Update Character
+
+## `PUT /v1/characters/{name}`
+
+Updates an existing character's metadata and optionally replaces its reference audio and voice clone.
+
+### Alias
+
+```text
+PUT /characters/{name}
+```
+
+### Content Type
+
+```text
+multipart/form-data
+```
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | Yes | Existing character name |
+
+### Form Fields
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `audio` | file | No | New reference voice audio |
+| `instructions` | string | No | Replace stored instructions |
+| `personality` | string | No | Replace stored personality |
+| `description` | string | No | Replace stored description |
+
+### Important Behavior
+
+Audio is optional.
+
+If **no audio is supplied**:
+
+- Existing voice clone is preserved.
+- Existing transcript is preserved.
+- Only supplied metadata fields are changed.
+
+If **audio is supplied**:
+
+1. The new audio is validated.
+2. Whisper generates a new transcript.
+3. Qwen generates a new voice-clone prompt.
+4. The existing voice prompt is replaced.
+5. The existing transcript is replaced.
+6. `source_audio` is updated.
+7. Supplied metadata is updated.
+
+### Example: Metadata Only
+
+```bash
+curl -X PUT \
+  http://mimic-tts:8000/v1/characters/eira \
+  -F "instructions=Speak softly and naturally." \
+  -F "personality=Calm and thoughtful."
+```
+
+### Example: Replace Voice Audio
+
+```bash
+curl -X PUT \
+  http://mimic-tts:8000/v1/characters/eira \
+  -F "audio=@new_eira_reference.wav" \
+  -F "instructions=Speak softly and naturally."
+```
+
+### Successful Response
+
+```json
+{
+  "success": true,
+  "character": {
+    "name": "eira"
+  },
+  "audio_updated": true,
+  "transcript": "This is the new reference recording...",
+  "files": {
+    "metadata": ".../metadata.json",
+    "transcript": ".../transcript.txt",
+    "voice_prompt": ".../voice_prompt.pt"
+  }
+}
+```
+
+When no audio is supplied, `audio_updated` is `false`.
+
+### Errors
+
+#### Character does not exist
+
+```text
+404 Not Found
+```
+
+#### Invalid audio
+
+```text
+400 Bad Request
+```
+
+#### Update failure
+
+```text
+500 Internal Server Error
+```
+
+---
+
+# 7. OpenAI-Compatible Speech
+
+## `POST /v1/audio/speech`
+
+Generates speech using a stored character voice.
+
+This endpoint is intended to provide compatibility with clients such as Open WebUI.
+
+### Alias
+
+```text
+POST /tts/speech
+```
+
+### Content Type
+
+```text
+application/json
+```
+
+### Request
+
+```json
+{
+  "model": "mimic-tts",
+  "voice": "eira",
+  "input": "Hello, welcome to my world.",
+  "response_format": "wav",
+  "instructions": "Speak warmly.",
+  "emotion": "happy"
+}
+```
+
+### Fields
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `model` | string | No | `mimic-tts` | Model identifier |
+| `voice` | string | Yes | — | Character name |
+| `input` | string | Yes | — | Text to speak |
+| `response_format` | string | No | `wav` | Audio format |
+| `instructions` | string/null | No | `null` | Temporary performance instructions |
+| `emotion` | string/null | No | `neutral` | Desired emotion |
+
+Currently supported output formats:
+
+```text
+wav
+wave
+```
+
+### Example
+
+```bash
+curl -X POST \
+  http://mimic-tts:8000/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mimic-tts",
+    "voice": "eira",
+    "input": "Hello, welcome to my world.",
+    "response_format": "wav",
+    "instructions": "Speak warmly.",
+    "emotion": "happy"
+  }' \
+  --output speech.wav
+```
+
+### Response
+
+```text
+Content-Type: audio/wav
+```
+
+The response body contains the generated WAV audio.
+
+### Behavior
+
+The OpenAI-compatible endpoint internally uses the character roleplay generation workflow:
+
+```text
+voice
+  ↓
+CharacterManager.get()
+  ↓
+stored metadata + voice_prompt.pt
+  ↓
+CharacterManager.generate_roleplay()
+  ↓
+Qwen3Engine.generate_roleplay()
+  ↓
+WAV
+```
+
+### Errors
+
+#### Unsupported model
+
+```text
+400 Bad Request
+```
+
+#### Missing text
+
+```text
+400 Bad Request
+```
+
+#### Voice not found
+
+```text
+404 Not Found
+```
+
+#### Generation failure
+
+```text
+500 Internal Server Error
+```
+
+---
+
+# 8. Roleplay Speech
+
+## `POST /v1/roleplay`
+
+Generates speech for a stored character using the explicit Mimic-TTS roleplay API.
+
+Unlike `/v1/audio/speech`, this endpoint uses `character` rather than OpenAI's `voice` terminology.
+
+### Aliases
+
+```text
+POST /roleplay
+POST /tts/roleplay
+```
+
+### Content Type
+
+```text
+application/json
+```
+
+### Request
+
+```json
+{
+  "character": "eira",
+  "text": "Hello there. What brings you to my village?",
+  "instructions": "Speak warmly but cautiously.",
+  "emotion": "curious",
+  "response_format": "wav"
+}
+```
+
+### Fields
+
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `character` | string | Yes | — | Existing character name |
+| `text` | string | Yes | — | Dialogue to synthesize |
+| `instructions` | string/null | No | `null` | Temporary performance instructions |
+| `emotion` | string/null | No | `neutral` | Desired emotion |
+| `response_format` | string | No | `wav` | Audio format |
+
+Currently supported output formats:
+
+```text
+wav
+wave
+```
+
+### Example
+
+```bash
+curl -X POST \
+  http://mimic-tts:8000/v1/roleplay \
+  -H "Content-Type: application/json" \
+  -d '{
+    "character": "eira",
+    "text": "Hello there. What brings you to my village?",
+    "instructions": "Speak warmly but cautiously.",
+    "emotion": "curious",
+    "response_format": "wav"
+  }' \
+  --output eira.wav
+```
+
+### Response
+
+```text
+Content-Type: audio/wav
+```
+
+The response body contains the generated WAV audio.
+
+### Generation Flow
+
+The roleplay endpoint uses the stored character assets:
+
+```text
+POST /v1/roleplay
+        │
+        ▼
+CharacterManager.get()
+        │
+        ▼
+Load character metadata
+        │
+        ▼
+Load voice_prompt.pt
+        │
+        ▼
+CharacterManager.generate_roleplay()
+        │
+        ├── stored instructions
+        ├── request instructions
+        └── emotion
+        │
+        ▼
+Qwen3Engine.generate_roleplay()
+        │
+        ▼
+Qwen3 voice clone generation
+        │
+        ▼
+WAV response
+```
+
+### Errors
+
+#### Missing character
+
+```text
+400 Bad Request
+```
+
+#### Character does not exist
+
+```text
+404 Not Found
+```
+
+#### Missing text
+
+```text
+400 Bad Request
+```
+
+#### Generation failure
+
+```text
+500 Internal Server Error
+```
+
+---
+
+# 9. Character Data Model
+
+A character consists of three primary persistent assets.
+
+```text
+characters/
+└── <character>/
+    ├── metadata.json
+    ├── transcript.txt
+    └── voice_prompt.pt
+```
+
+## `metadata.json`
+
+Contains character metadata such as:
+
+- Character name
+- Source audio path
+- Instructions
+- Personality
+- Description
+- Schema version
+
+## `transcript.txt`
+
+Contains the Whisper-generated transcript of the reference audio.
+
+This transcript is used when creating the Qwen voice clone prompt.
+
+## `voice_prompt.pt`
+
+Contains the native Qwen voice clone prompt generated from the reference audio and transcript.
+
+This is the persistent voice asset used for subsequent speech generation.
+
+---
+
+# 10. Voice Replacement
+
+A character's voice can be replaced without creating a new character.
+
+Use:
+
+```text
+PUT /v1/characters/{name}
+```
+
+with a new `audio` file.
+
+For example:
+
+```bash
+curl -X PUT \
+  http://mimic-tts:8000/v1/characters/eira \
+  -F "audio=@eira_v2.wav"
+```
+
+The new audio is:
+
+```text
+new reference audio
+        ↓
+Whisper transcript
+        ↓
+Qwen voice clone prompt
+        ↓
+replace voice_prompt.pt
+        ↓
+replace transcript.txt
+        ↓
+update metadata.json
+```
+
+The character name remains unchanged.
+
+---
+
+# 11. Metadata-Only Updates
+
+Metadata can be changed without touching the voice clone.
+
+Example:
+
+```bash
+curl -X PUT \
+  http://mimic-tts:8000/v1/characters/eira \
+  -F "personality=Wise, patient, and protective." \
+  -F "description=A wandering mage."
+```
+
+The existing:
+
+```text
+voice_prompt.pt
+transcript.txt
+```
+
+remain unchanged.
+
+---
+
+# 12. Temporary Instructions vs Stored Instructions
+
+Characters may have stored instructions:
+
+```text
+metadata.instructions
+```
+
+A generation request may also provide temporary instructions:
+
+```json
+{
+  "instructions": "Whisper this line."
+}
+```
+
+For roleplay generation, the engine combines the character's stored instructions with request-specific instructions and the requested emotion.
+
+This allows the same character to have a persistent vocal style while still supporting per-line performance direction.
+
+---
+
+# 13. Emotion
+
+Emotion is supplied as a generation-time parameter.
+
+Example:
+
+```json
+{
+  "character": "eira",
+  "text": "You actually came back.",
+  "emotion": "surprised"
+}
+```
+
+The emotion is converted into a performance instruction before being passed to Qwen3-TTS.
+
+Examples include:
+
+```text
+neutral
+happy
+sad
+angry
+surprised
+fearful
+excited
+```
+
+The API does not currently restrict the value to a fixed enumeration, so arbitrary descriptive emotion values may be supplied.
+
+---
+
+# 14. Open WebUI Integration
+
+For OpenAI-compatible clients, configure the TTS service URL as:
+
+```text
+http://mimic-tts:8000/v1
+```
+
+The client should use:
+
+```text
 POST /v1/audio/speech
 ```
 
----
+with:
 
-# Quick API Test
-
-## Check Service
-
-```bash
-curl http://localhost:8188/health
+```json
+{
+  "model": "mimic-tts",
+  "voice": "eira",
+  "input": "Text to speak."
+}
 ```
 
-## List Voices
+The returned content is WAV audio.
 
-```bash
-curl http://localhost:8188/v1/voices
-```
-
-## Generate Speech
-
-```bash
-curl \
-  -X POST \
-  http://localhost:8188/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mimic" \
-  -d '{
-    "model": "mimic-tts",
-    "voice": "jester",
-    "input": "Hello there! How are you doing today?"
-  }' \
-  --output /tmp/test.wav
-```
-
-## Play Generated Audio
-
-Linux:
-
-```bash
-ffplay /tmp/test.wav
-```
-
-Or use any standard WAV audio player.
+The `/v1/audio/speech` endpoint and `/v1/roleplay` endpoint ultimately use the same character voice-cloning infrastructure.
 
 ---
 
-# Development Notes
+# 15. ComfyUI Integration
 
-The API is intentionally thin.
-
-The primary responsibilities are:
+A ComfyUI client can use the explicit roleplay endpoint:
 
 ```text
-API
- |
- +-- Parse request
- |
- +-- Resolve character
- |
- +-- Build RoleplayRequest
- |
- +-- Call CharacterManager
- |
- +-- Return WAV
+POST /v1/roleplay
 ```
 
-The API should not contain Qwen-specific model logic.
+Example request:
 
-Qwen model logic belongs in:
+```json
+{
+  "character": "eira",
+  "text": "Welcome, traveler.",
+  "instructions": "",
+  "emotion": "neutral",
+  "response_format": "wav"
+}
+```
+
+For character management, ComfyUI can use:
 
 ```text
-app/core/qwen3_engine.py
+GET  /v1/voices
+POST /v1/characters
+PUT  /v1/characters/{name}
 ```
 
-Character workflow logic belongs in:
+This allows a workflow to:
 
-```text
-app/core/characters/manager.py
-```
-
-Filesystem persistence belongs in:
-
-```text
-app/core/characters/storage.py
-```
-
-Character data models belong in:
-
-```text
-app/core/characters/models.py
-```
-
-This separation allows the CLI, Open WebUI, Foundry VTT, and future clients to use the same underlying character and TTS infrastructure.
+1. List available characters.
+2. Create a character from reference audio.
+3. Update the reference audio.
+4. Update character metadata.
+5. Generate roleplay speech.
 
 ---
 
-# Potential Future Improvements
+# 16. Recommended API Usage
 
-Potential future improvements include:
+### Create a new character
 
-- API authentication
-- Streaming audio responses
-- MP3 / Opus output support
-- Async generation jobs
-- Request queueing
-- GPU memory management
-- Character-specific default emotions
-- Character-specific default instructions
-- Automatic character metadata enrichment
-- API endpoint for character creation
-- API endpoint for character deletion
-- API endpoint for character metadata
-- API endpoint for character management
-- OpenAPI documentation
-- WebSocket-based streaming
-- Foundry VTT actor-to-character mapping
-- Per-user voice preferences in Open WebUI
-- Multiple GPU support
-- Persistent model lifecycle management
+```text
+POST /v1/characters
+```
 
-The current architecture intentionally keeps character creation primarily CLI-driven while exposing runtime speech generation through the API.
+### Change a character's reference voice
+
+```text
+PUT /v1/characters/{name}
+```
+
+with `audio`.
+
+### Change only character metadata
+
+```text
+PUT /v1/characters/{name}
+```
+
+without `audio`.
+
+### List available voices
+
+```text
+GET /v1/voices
+```
+
+### Generate normal OpenAI-compatible speech
+
+```text
+POST /v1/audio/speech
+```
+
+### Generate explicit character roleplay speech
+
+```text
+POST /v1/roleplay
+```
+
+---
+
+# 17. Status Codes
+
+| Status | Meaning |
+|---:|---|
+| `200` | Successful request |
+| `201` | Character successfully created |
+| `400` | Invalid request, missing field, unsupported audio, etc. |
+| `404` | Character/voice not found |
+| `409` | Character already exists and overwrite is disabled |
+| `500` | Internal TTS, transcription, or character-processing failure |
+
+---
+
+# 18. Design Notes
+
+Mimic-TTS separates the application API from Qwen3-TTS internals.
+
+The API communicates with:
+
+```text
+CharacterManager
+```
+
+rather than directly manipulating Qwen3 objects.
+
+The character manager coordinates:
+
+```text
+Audio validation
+      ↓
+Whisper transcription
+      ↓
+Qwen voice clone prompt creation
+      ↓
+Character storage
+      ↓
+Roleplay generation
+```
+
+The Qwen engine is responsible for the actual Qwen3-TTS operations.
+
+This separation allows the API, ComfyUI integration, and Open WebUI integration to share the same character/voice infrastructure.

@@ -1,20 +1,25 @@
 """
-######################################
-Summary:
-######################################
+Character Storage
+
+Responsibilities:
+
 - Character filesystem access
-- Handles persistence of:
+- Character CRUD
+- Persistence of:
     - metadata.json
     - transcript.txt
-    - voice.pt
     - voice_prompt.pt
+
+This class intentionally knows nothing about:
+
+- Qwen
+- Whisper
+- TTS generation
 """
 
 from __future__ import annotations
 
 import json
-import shutil
-
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -31,18 +36,13 @@ from .models import (
 
 class CharacterStorage:
     """
-    Handles all filesystem operations
-    related to character storage.
-
-    This class intentionally knows nothing
-    about Qwen or Whisper.
-
-    It only manages files.
+    Handles all filesystem operations related
+    to character storage.
     """
 
     def __init__(
         self,
-        root: Path |None = None,
+        root: Path | None = None,
     ):
         """
         Initialize character storage.
@@ -70,8 +70,7 @@ class CharacterStorage:
         name: str,
     ) -> Path:
         """
-        Return filesystem directory
-        for a character.
+        Return filesystem directory for a character.
         """
 
         return self.root / name
@@ -95,16 +94,13 @@ class CharacterStorage:
                 Character name.
 
             overwrite:
-                Delete existing character
-                before recreating.
+                Delete existing character before recreating.
 
         Returns:
             Character object.
         """
 
-        directory = self.character_path(
-            name
-        )
+        directory = self.character_path(name)
 
         if directory.exists():
 
@@ -114,9 +110,9 @@ class CharacterStorage:
                     f"Character already exists: {name}"
                 )
 
-            shutil.rmtree(
-                directory
-            )
+            import shutil
+
+            shutil.rmtree(directory)
 
         directory.mkdir(
             parents=True,
@@ -136,9 +132,7 @@ class CharacterStorage:
         Check if character exists.
         """
 
-        return self.character_path(
-            name
-        ).is_dir()
+        return self.character_path(name).is_dir()
 
     def delete(
         self,
@@ -147,6 +141,8 @@ class CharacterStorage:
         """
         Delete a character completely.
         """
+
+        import shutil
 
         shutil.rmtree(
             self.character_path(name),
@@ -161,9 +157,7 @@ class CharacterStorage:
         Load character filesystem reference.
         """
 
-        directory = self.character_path(
-            name
-        )
+        directory = self.character_path(name)
 
         if not directory.exists():
 
@@ -180,8 +174,7 @@ class CharacterStorage:
         self,
     ) -> list[Character]:
         """
-        Return all stored characters
-        sorted by name.
+        Return all stored characters sorted by name.
         """
 
         if not self.root.exists():
@@ -198,7 +191,7 @@ class CharacterStorage:
 
         return sorted(
             characters,
-            key=lambda c: c.name.lower(),
+            key=lambda character: character.name.lower(),
         )
 
     ############################################################
@@ -274,17 +267,21 @@ class CharacterStorage:
             **data
         )
 
+    ############################################################
+    #
+    # Runtime Assets
+    #
+    ############################################################
+
     def load_assets(
         self,
         character: Character,
-    ) -> tuple[
-        CharacterMetadata,
-        Any,
-    ]:
+    ) -> tuple[CharacterMetadata, Any]:
         """
         Load all runtime character assets.
 
         Returns:
+
             (
                 CharacterMetadata,
                 VoiceClonePromptItem list,
@@ -298,42 +295,7 @@ class CharacterStorage:
 
     ############################################################
     #
-    # Voice Profile Handling
-    #
-    ############################################################
-
-    def save_voice_profile(
-        self,
-        character: Character,
-        source_path: Path,
-    ) -> None:
-        """
-        Save legacy voice profile.
-
-        This is metadata only.
-
-        The actual Qwen prompt is stored
-        separately in voice_prompt.pt.
-        """
-
-        shutil.copy2(
-            source_path,
-            character.voice_path,
-        )
-
-    def load_voice_profile(
-        self,
-        character: Character,
-    ) -> Path:
-        """
-        Return path to legacy voice profile.
-        """
-
-        return character.voice_path
-
-    ############################################################
-    #
-    # Qwen Voice Clone Prompt Handling
+    # Qwen Voice Clone Prompt
     #
     ############################################################
 
@@ -355,13 +317,8 @@ class CharacterStorage:
         """
         Save Qwen VoiceClonePromptItem data.
 
-        Stores:
-            - reference audio codes
-            - speaker embedding
-            - clone settings
-
-        This avoids recreating the prompt
-        on every generation.
+        Stores the expensive generated voice-cloning
+        information used during subsequent generation.
         """
 
         torch.save(
@@ -375,15 +332,13 @@ class CharacterStorage:
     ) -> Any:
         """
         Load Qwen VoiceClonePromptItem data.
-
-        Returns:
-            List[VoiceClonePromptItem]
         """
 
         if not character.prompt_path.exists():
 
             raise FileNotFoundError(
-                f"Missing voice prompt: {character.prompt_path}"
+                f"Missing voice prompt: "
+                f"{character.prompt_path}"
             )
 
         return torch.load(

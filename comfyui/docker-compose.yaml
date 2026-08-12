@@ -1,5 +1,6 @@
 services:
   comfyui:
+    image: comfyui:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,8 +15,11 @@ services:
       - ai
     volumes:
       - ../ai_data/comfyui:/data
+      - ./custom_nodes/mimic_tts:/opt/ComfyUI/custom_nodes/mimic_tts
     ports:
-      - "8188:8188"
+      - "8189:8188"
+    environment:
+      MIMIC_TTS_URL: http://mimic-tts:8000
 
 
 networks:
