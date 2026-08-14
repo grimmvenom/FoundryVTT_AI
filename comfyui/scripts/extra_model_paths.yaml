@@ -1,0 +1,17 @@
+comfyui:
+  base_path: /data/
+
+  is_default: true
+
+  checkpoints: models/checkpoints/
+  diffusion_models: models/diffusion_models/
+  text_encoders: models/text_encoders/
+  clip_vision: models/clip_vision/
+  vae: models/vae/
+  loras: models/loras/
+  controlnet: models/controlnet/
+  embeddings: models/embeddings/
+  upscale_models: models/upscale_models/
+  gligen: models/gligen/
+  style_models: models/style_models/
+  hypernetworks: models/hypernetworks/

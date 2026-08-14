@@ -16,6 +16,7 @@ services:
     volumes:
       - ../ai_data/comfyui:/data
       - ./custom_nodes/mimic_tts:/opt/ComfyUI/custom_nodes/mimic_tts
+      - ./custom_nodes/dnd_images:/opt/ComfyUI/custom_nodes/dnd_images
     ports:
       - "8189:8188"
     environment:

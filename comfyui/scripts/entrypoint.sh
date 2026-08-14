@@ -17,11 +17,9 @@ echo
 
 mkdir -p \
     "${DATA_DIR}/models" \
-    "${DATA_DIR}/custom_nodes" \
     "${DATA_DIR}/input" \
     "${DATA_DIR}/output" \
     "${DATA_DIR}/user" \
-    "${DATA_DIR}/workflows"
 
 # ---------------------------------------------------------------------------
 # Models
@@ -103,11 +101,9 @@ done
 echo
 echo "Persistent data:"
 echo "  Models:        ${DATA_DIR}/models"
-echo "  Custom nodes:  ${DATA_DIR}/custom_nodes"
 echo "  Input:         ${DATA_DIR}/input"
 echo "  Output:        ${DATA_DIR}/output"
 echo "  User:          ${DATA_DIR}/user"
-echo "  Workflows:     ${DATA_DIR}/workflows"
 echo
 
 # ---------------------------------------------------------------------------
@@ -118,5 +114,7 @@ cd "${COMFYUI_HOME}"
 
 exec python main.py \
     --listen 0.0.0.0 \
-    --port 8188
+    --port 8188 \
+    --extra-model-paths-config /opt/ComfyUI/extra_model_paths.yaml \
+    --enable-manager
 

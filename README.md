@@ -10,8 +10,8 @@ The goal of this project is to build a semi-air gapped AI to support my Foundry 
     - [x] Integrate AI Prompts & Responses into FoundryVTT
     - [x] Integrate TTS into OpenWeb UI
     - [x] Integrate TTS with FoundryVTT (via script / macro)
-    - [] ComfyUI for [qwen3](https://github.com/DarioFT/ComfyUI-Qwen3-TTS)
-    - [] ComfyUI for mimic-TTS
+    - [x] ComfyUI for [qwen3](https://github.com/DarioFT/ComfyUI-Qwen3-TTS)
+    - [x] ComfyUI for mimic-TTS
     - [] ComfyUI for image generation
 
 <br>

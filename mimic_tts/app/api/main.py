@@ -327,6 +327,33 @@ def list_models():
 
 ############################################################
 #
+# Character Listing
+#
+############################################################
+
+@app.get(
+    "/v1/characters",
+)
+@app.get(
+    "/characters",
+)
+def list_characters():
+
+    characters = manager.list()
+
+    return {
+        "object": "list",
+        "data": [
+            {
+                "name": character.name,
+            }
+            for character in characters
+        ],
+    }
+
+
+############################################################
+#
 # Voices
 #
 ############################################################
