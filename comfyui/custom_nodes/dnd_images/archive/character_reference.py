@@ -1,4 +1,4 @@
-from .character_utils import (
+from ..character_utils import (
     list_characters,
     character_from_library,
     apply_character_reference,

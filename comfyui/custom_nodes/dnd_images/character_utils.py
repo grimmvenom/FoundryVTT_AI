@@ -20,8 +20,8 @@ IMAGE_EXTENSIONS = {
 }
 
 
-# These are the same preferred resolutions used by
-# ComfyUI's FluxKontextImageScale node.
+# These match the preferred resolutions used by ComfyUI's
+# Flux Kontext image scaling infrastructure.
 PREFERRED_KONTEXT_RESOLUTIONS = [
     (672, 1568),
     (688, 1504),
@@ -53,7 +53,9 @@ def characters_root():
 
     With the Docker setup used by this project, this resolves to:
 
-        ai_data/comfyui/input/characters/
+        /opt/ComfyUI/input/characters/
+
+    which is mounted from the host's ComfyUI input volume.
     """
     return Path(folder_paths.get_input_directory()) / CHARACTERS_DIR
 
@@ -63,6 +65,7 @@ def safe_id(name):
     Convert a character name into a safe directory ID.
 
     Example:
+
         "Sir Julian!" -> "sir_julian"
     """
     value = re.sub(
@@ -111,10 +114,10 @@ def list_characters():
     """
     Return all characters that have a valid reference image.
 
-    The returned values are the character directory IDs, which are
-    also the values used by the Prepare Characters dropdown.
+    The returned values are the character directory IDs.
     """
     root = characters_root()
+
     root.mkdir(
         parents=True,
         exist_ok=True,
@@ -134,11 +137,9 @@ def read_character(character_id):
     """
     Load character metadata and reference image information.
 
-    This reads:
+    Reads:
 
         characters/<character_id>/character.json
-
-    and locates the corresponding reference image.
     """
     folder = characters_root() / character_id
 
@@ -229,6 +230,70 @@ def join_lines(values):
     )
 
 
+def make_character_context(character):
+    """
+    Convert one CHARACTER object into textual context for the scene prompt.
+
+    The scene prompt does not need to know the internal structure of a
+    CHARACTER object. This function is the boundary between character
+    metadata and natural-language scene prompting.
+    """
+    if not character:
+        return ""
+
+    name = (
+        character.get("name")
+        or character.get("id")
+        or "Character"
+    )
+
+    description = (
+        character.get("description")
+        or ""
+    ).strip()
+
+    preserve = [
+        str(value).strip()
+        for value in (
+            character.get("preserve")
+            or []
+        )
+        if str(value).strip()
+    ]
+
+    avoid = [
+        str(value).strip()
+        for value in (
+            character.get("avoid")
+            or []
+        )
+        if str(value).strip()
+    ]
+
+    sections = [
+        f"{name}:"
+    ]
+
+    if description:
+        sections.append(
+            f"Description: {description}"
+        )
+
+    if preserve:
+        sections.append(
+            "Preserve: "
+            + join_lines(preserve)
+        )
+
+    if avoid:
+        sections.append(
+            "Avoid: "
+            + join_lines(avoid)
+        )
+
+    return "\n".join(sections)
+
+
 # ============================================================================
 # Character Persistence
 # ============================================================================
@@ -244,9 +309,6 @@ def save_character_data(
     Persist a character to the character library.
 
     Existing characters are intentionally updated.
-
-    The Editor's save_character option determines whether this function
-    is called.
     """
     character_id = safe_id(name)
 
@@ -340,19 +402,6 @@ def make_character(
     """
     Create the structured CHARACTER object passed between D&D
     character nodes.
-
-    The CHARACTER object contains:
-
-        name
-        description
-        preserve
-        avoid
-        image
-        id
-        path
-
-    The id and path are implementation details used internally by
-    the character library.
     """
     if preserve is None:
         preserve = []
@@ -397,10 +446,6 @@ def character_from_library(character_id):
             CHARACTER,
             IMAGE,
         )
-
-    The IMAGE is the same reference image stored inside the CHARACTER
-    object. It is returned separately because Character Reference and
-    other nodes may need direct access to it.
     """
     data = read_character(
         character_id
@@ -483,11 +528,7 @@ def run_core_node(
     """
     Execute a native ComfyUI node.
 
-    ComfyUI V3 nodes use EXECUTE_NORMALIZED. That wrapper exposes
-    (*args, **kwargs), so signature inspection is not appropriate
-    for those nodes.
-
-    Legacy V1 nodes continue to use signature-based filtering.
+    Supports both ComfyUI V3 execution and legacy V1 nodes.
     """
     node = get_core_node(
         node_name
@@ -593,70 +634,78 @@ def load_image(path):
 
 
 # ============================================================================
-# Flux Kontext Reference Helpers
+# Flux 2 Character Latent Preparation
 # ============================================================================
 
-def apply_character_reference(
+def prepare_character_latent(
     image,
-    conditioning,
     vae,
+    width=768,
+    height=768,
 ):
     """
-    Apply one image as a Flux Kontext reference latent.
+    Prepare one character image for the native Flux 2 Character References
+    node.
 
     Pipeline:
 
         IMAGE
           |
           v
-        FluxKontextImageScale
+        ImageScale
           |
           v
         VAEEncode
           |
           v
-        ReferenceLatent
-          |
-          v
-        CONDITIONING
+        LATENT
 
-    The resulting CONDITIONING can be passed into another
-    Character Reference or Character Editor node.
+    This intentionally mirrors the working Flux 2 workflow:
+
+        reference image
+            -> ImageScale 768x768
+            -> VAEEncode
+            -> LatentBatch
+            -> ReferenceLatent
+
+    We only prepare the individual latent here.
+
+    DNDPrepareCharacters is responsible for combining multiple character
+    latents into one LATENT batch.
     """
     if image is None:
         raise ValueError(
-            "A reference image is required."
-        )
-
-    if conditioning is None:
-        raise ValueError(
-            "Conditioning is required."
+            "A character reference image is required."
         )
 
     if vae is None:
         raise ValueError(
-            "VAE is required."
+            "A VAE is required to prepare a character reference."
         )
 
-    # ------------------------------------------------------------------------
-    # Scale reference image
-    # ------------------------------------------------------------------------
+    try:
+        if len(image) == 0:
+            raise ValueError(
+                "Character reference image is empty."
+            )
+    except TypeError:
+        pass
 
     scaled_result = run_core_node(
-        "FluxKontextImageScale",
+        "ImageScale",
         image=image,
+        upscale_method="lanczos",
+        width=width,
+        height=height,
+        crop="center",
     )
 
     if not scaled_result:
         raise RuntimeError(
-            "FluxKontextImageScale returned no output."
+            "ImageScale returned no output."
         )
 
     scaled_image = scaled_result[0]
-
-    # ------------------------------------------------------------------------
-    # Encode reference image
-    # ------------------------------------------------------------------------
 
     encoded_result = run_core_node(
         "VAEEncode",
@@ -669,11 +718,86 @@ def apply_character_reference(
             "VAEEncode returned no output."
         )
 
-    latent = encoded_result[0]
+    return encoded_result[0]
 
-    # ------------------------------------------------------------------------
-    # Apply reference latent
-    # ------------------------------------------------------------------------
+
+def combine_character_latents(latents):
+    """
+    Combine multiple character reference latents into one latent batch.
+
+    This mirrors the native LatentBatch chain used by the working
+    Flux 2 workflow.
+
+    Example:
+
+        latent_1
+            \
+             LatentBatch
+            /
+        latent_2
+            \
+             LatentBatch
+            /
+        latent_3
+
+    The result is one LATENT containing all character references.
+    """
+    valid_latents = [
+        latent
+        for latent in (latents or [])
+        if latent is not None
+    ]
+
+    if not valid_latents:
+        raise ValueError(
+            "At least one character latent is required."
+        )
+
+    combined = valid_latents[0]
+
+    for latent in valid_latents[1:]:
+
+        result = run_core_node(
+            "LatentBatch",
+            samples1=combined,
+            samples2=latent,
+        )
+
+        if not result:
+            raise RuntimeError(
+                "LatentBatch returned no output."
+            )
+
+        combined = result[0]
+
+    return combined
+
+
+# ============================================================================
+# Flux 2 Reference Conditioning Helper
+# ============================================================================
+
+def apply_character_reference(
+    image,
+    conditioning,
+    vae,
+):
+    """
+    Legacy/convenience helper.
+
+    Apply one image as a Flux 2 reference latent.
+
+    This remains available for compatibility with older workflows and
+    nodes, but the preferred architecture is now:
+
+        DNDPrepareCharacters
+            -> CHARACTER LATENT
+            -> native Flux 2 ReferenceLatent
+    """
+    latent = prepare_character_latent(
+        image=image,
+        vae=vae,
+    )
 
     reference_result = run_core_node(
         "ReferenceLatent",

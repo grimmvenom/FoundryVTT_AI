@@ -1,322 +1,148 @@
-from comfy_api.latest import io
-
 from .character_utils import (
-    list_characters,
     character_from_library,
+    list_characters,
+    make_character_context,
 )
 
 
-# ============================================================================
-# Custom Types
-# ============================================================================
-
-Character = io.Custom("CHARACTER")
-CharacterReferences = io.Custom("CHARACTER_REFERENCES")
-
-
-# ============================================================================
-# Constants
-# ============================================================================
-
-MAX_LIBRARY_CHARACTERS = 10
-
-
-# ============================================================================
-# Helpers
-# ============================================================================
-
-def _clean_list(value):
-    """Normalize Preserve/Avoid data into a clean list of strings."""
-
-    if value is None:
-        return []
-
-    if isinstance(value, str):
-        value = [value]
-
-    if not isinstance(value, (list, tuple)):
-        return []
-
-    return [
-        str(item).strip()
-        for item in value
-        if str(item).strip()
-    ]
-
-
-def _character_to_section(character):
+class DNDPrepareCharacters:
     """
-    Convert one CHARACTER dictionary into scene-prompt context text.
+    Prepare one or more CHARACTER objects for the D&D image-generation
+    workflow.
 
-    The image itself is NOT represented here. Images are carried separately
-    through CHARACTER_REFERENCES.
+    Character sources:
+
+        1. Direct `characters` input.
+           Optional 1:many CHARACTER input from D&D Character Editor
+           or another CHARACTER-producing node.
+
+        2. Persistent character-library selectors.
+
+    Both sources are merged into the same character collection.
+
+    Library selectors can be empty. An empty selector contributes no
+    character.
+
+    This node does NOT perform FLUX.2 image preparation.
     """
 
-    if not isinstance(character, dict):
-        return None
-
-    name = str(
-        character.get("name", "")
-    ).strip()
-
-    description = str(
-        character.get("description", "")
-    ).strip()
-
-    preserve = _clean_list(
-        character.get("preserve", [])
-    )
-
-    avoid = _clean_list(
-        character.get("avoid", [])
-    )
-
-    if not name:
-        name = "Unnamed Character"
-
-    lines = [
-        f"CHARACTER: {name}",
-    ]
-
-    if description:
-        lines.append(
-            f"Description: {description}"
-        )
-
-    if preserve:
-        lines.append(
-            "Preserve: "
-            + ", ".join(preserve)
-        )
-
-    if avoid:
-        lines.append(
-            "Avoid: "
-            + ", ".join(avoid)
-        )
-
-    return "\n".join(lines)
-
-
-def _character_name(character):
-    """Return a normalized character name."""
-
-    if not isinstance(character, dict):
-        return ""
-
-    return str(
-        character.get("name", "")
-    ).strip()
-
-
-def _add_character(
-    sections,
-    references,
-    seen_names,
-    character,
-    image=None,
-):
-    """
-    Add one CHARACTER object.
-
-    `sections` contains the textual prompt context.
-
-    `references` contains the actual reference image together with the
-    character name.
-
-    Duplicate names are ignored.
-    """
-
-    if not isinstance(character, dict):
-        return
-
-    section = _character_to_section(character)
-
-    if not section:
-        return
-
-    name = _character_name(character)
-
-    normalized_name = name.lower()
-
-    if not normalized_name:
-        normalized_name = section.lower()
-
-    if normalized_name in seen_names:
-        return
-
-    seen_names.add(normalized_name)
-
-    sections.append(section)
-
-    # Only add an image reference when an actual image exists.
-    if image is not None:
-        references.append(
-            {
-                "name": name,
-                "image": image,
-            }
-        )
-
-
-# ============================================================================
-# D&D Prepare Characters
-# ============================================================================
-
-class DNDPrepareCharacters(io.ComfyNode):
-    """
-    Combine connected CHARACTER objects and persistent library characters.
-
-    Outputs:
-
-        CHARACTER_CONTEXT
-            Textual character descriptions, Preserve instructions, and
-            Avoid instructions.
-
-        CHARACTER_REFERENCES
-            The actual reference images associated with the characters.
-
-    Library selectors are fixed in the Python schema. The JavaScript
-    extension only controls how many of those selectors are visible.
-
-    There is intentionally NO autogrow behavior.
-    """
+    MAX_CHARACTERS = 10
 
     @classmethod
-    def define_schema(cls):
+    def INPUT_TYPES(cls):
 
-        library_characters = list_characters()
+        # --------------------------------------------------------------
+        # IMPORTANT:
+        #
+        # The empty string is a real selectable option.
+        #
+        # This allows a library selector to be cleared after a character
+        # has previously been selected.
+        # --------------------------------------------------------------
 
-        # ComfyUI combo validation requires selected values to exist in
-        # this list.
-        library_options = [""]
+        library_choices = [
+            "",
+            *list_characters(),
+        ]
 
-        for name in library_characters:
+        return {
+            "required": {
+            },
 
-            if (
-                name
-                and name not in library_options
-            ):
-                library_options.append(name)
+            "optional": {
 
-        return io.Schema(
-            node_id="DNDPrepareCharacters",
+                # ------------------------------------------------------
+                # Optional 1:many CHARACTER input.
+                # ------------------------------------------------------
 
-            display_name="D&D Prepare Characters",
-
-            category="D&D Images/Characters",
-
-            description=(
-                "Combine CHARACTER inputs and persistent library "
-                "characters into character context and reference images."
-            ),
-
-            inputs=[
-
-                # ============================================================
-                # ONE CHARACTER input
-                # ============================================================
-
-                Character.Input(
-                    "characters",
-                    optional=True,
-                    lazy=False,
-                    tooltip=(
-                        "Connect CHARACTER outputs here."
-                    ),
+                "characters": (
+                    "CHARACTER",
                 ),
 
-                # ============================================================
-                # Persistent library selectors
-                # ============================================================
+                # ------------------------------------------------------
+                # Persistent character-library selectors.
+                #
+                # "" means no character selected.
+                # ------------------------------------------------------
 
-                io.Combo.Input(
-                    "library_character_1",
-                    options=library_options,
-                    default="",
+                "library_character_0": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_2",
-                    options=library_options,
-                    default="",
+                "library_character_1": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_3",
-                    options=library_options,
-                    default="",
+                "library_character_2": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_4",
-                    options=library_options,
-                    default="",
+                "library_character_3": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_5",
-                    options=library_options,
-                    default="",
+                "library_character_4": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_6",
-                    options=library_options,
-                    default="",
+                "library_character_5": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_7",
-                    options=library_options,
-                    default="",
+                "library_character_6": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_8",
-                    options=library_options,
-                    default="",
+                "library_character_7": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_9",
-                    options=library_options,
-                    default="",
+                "library_character_8": (
+                    library_choices,
                 ),
 
-                io.Combo.Input(
-                    "library_character_10",
-                    options=library_options,
-                    default="",
+                "library_character_9": (
+                    library_choices,
                 ),
-            ],
+            },
+        }
 
-            outputs=[
+    # ------------------------------------------------------------------
+    # CHARACTER input accepts multiple connections.
+    # ------------------------------------------------------------------
 
-                # ============================================================
-                # Text context
-                # ============================================================
+    INPUT_IS_LIST = True
 
-                io.String.Output(
-                    "character_context",
-                    display_name="CHARACTER_CONTEXT",
-                ),
+    RETURN_TYPES = (
+        "CHARACTER",
+        "IMAGE",
+        "STRING",
+    )
 
-                # ============================================================
-                # Actual reference images
-                # ============================================================
+    RETURN_NAMES = (
+        "CHARACTERS",
+        "CHARACTER IMAGE",
+        "CHARACTER CONTEXT",
+    )
 
-                CharacterReferences.Output(
-                    "character_references",
-                    display_name="CHARACTER_REFERENCES",
-                ),
-            ],
-        )
+    OUTPUT_IS_LIST = (
+        True,
+        True,
+        False,
+    )
 
-    @classmethod
-    def execute(
-        cls,
+    FUNCTION = "prepare_characters"
+
+    CATEGORY = "D&D Images/Characters"
+
+    # ==================================================================
+    # Prepare characters
+    # ==================================================================
+
+    def prepare_characters(
+        self,
         characters=None,
+        library_character_0="",
         library_character_1="",
         library_character_2="",
         library_character_3="",
@@ -326,55 +152,49 @@ class DNDPrepareCharacters(io.ComfyNode):
         library_character_7="",
         library_character_8="",
         library_character_9="",
-        library_character_10="",
     ):
-        sections = []
 
-        references = []
+        # ==============================================================
+        # Direct CHARACTER input
+        # ==============================================================
 
-        seen_names = set()
+        prepared_characters = []
 
-        # ====================================================================
-        # Connected CHARACTER input
-        # ====================================================================
+        if characters is None:
+            characters = []
 
-        if characters is not None:
+        elif not isinstance(
+            characters,
+            list,
+        ):
+            characters = [
+                characters
+            ]
 
-            if isinstance(
-                characters,
+        for character in characters:
+
+            if character is None:
+                continue
+
+            if not isinstance(
+                character,
                 dict,
             ):
-                character_values = [
-                    characters
-                ]
-
-            elif isinstance(
-                characters,
-                (list, tuple),
-            ):
-                character_values = characters
-
-            else:
-                character_values = []
-
-            for character in character_values:
-
-                if character is None:
-                    continue
-
-                _add_character(
-                    sections=sections,
-                    references=references,
-                    seen_names=seen_names,
-                    character=character,
-                    image=None,
+                raise ValueError(
+                    "Prepare Characters received "
+                    "an invalid CHARACTER object."
                 )
 
-        # ====================================================================
-        # Library selections
-        # ====================================================================
+            prepared_characters.append(
+                character
+            )
 
-        library_selections = [
+        # ==============================================================
+        # Library characters
+        # ==============================================================
+
+        library_ids = (
+            library_character_0,
             library_character_1,
             library_character_2,
             library_character_3,
@@ -384,70 +204,152 @@ class DNDPrepareCharacters(io.ComfyNode):
             library_character_7,
             library_character_8,
             library_character_9,
-            library_character_10,
-        ]
+        )
 
-        for character_name in library_selections:
+        for character_id in library_ids:
 
-            if not character_name:
+            # ----------------------------------------------------------
+            # INPUT_IS_LIST can cause optional values to arrive as lists.
+            # Normalize them.
+            # ----------------------------------------------------------
+
+            if isinstance(
+                character_id,
+                list,
+            ):
+
+                if not character_id:
+                    continue
+
+                character_id = character_id[0]
+
+            # ----------------------------------------------------------
+            # Empty selector = no character.
+            # ----------------------------------------------------------
+
+            if (
+                character_id is None
+                or str(character_id).strip() == ""
+            ):
                 continue
 
-            character_name = str(
-                character_name
-            ).strip()
-
-            if not character_name:
-                continue
-
-            # character_from_library() returns:
-            #
-            #     character_data, image
-            #
-            # The previous implementation discarded `image`.
-            #
-            character_data, image = (
+            character, _ = (
                 character_from_library(
-                    character_name
+                    character_id
                 )
             )
 
-            _add_character(
-                sections=sections,
-                references=references,
-                seen_names=seen_names,
-                character=character_data,
-                image=image,
+            prepared_characters.append(
+                character
             )
 
-        # ====================================================================
-        # Final textual context
-        # ====================================================================
+        # ==============================================================
+        # Require at least one character
+        # ==============================================================
+
+        if not prepared_characters:
+            raise ValueError(
+                "Prepare Characters requires at least one character. "
+                "Connect a CHARACTER input or select a character "
+                "from the library."
+            )
+
+        # ==============================================================
+        # Collect reference images
+        # ==============================================================
+
+        images = []
+
+        for index, character in enumerate(
+            prepared_characters,
+            start=1,
+        ):
+
+            image = character.get(
+                "image"
+            )
+
+            if image is None:
+
+                name = character.get(
+                    "name",
+                    f"Character {index}",
+                )
+
+                raise ValueError(
+                    f"Character '{name}' "
+                    f"has no reference image."
+                )
+
+            try:
+                image_empty = (
+                    len(image) == 0
+                )
+            except TypeError:
+                image_empty = False
+
+            if image_empty:
+
+                name = character.get(
+                    "name",
+                    f"Character {index}",
+                )
+
+                raise ValueError(
+                    f"Character '{name}' "
+                    f"has an empty reference image."
+                )
+
+            images.append(
+                image
+            )
+
+        # ==============================================================
+        # Build consolidated character context
+        # ==============================================================
+
+        contexts = []
+
+        for character in prepared_characters:
+
+            context = (
+                make_character_context(
+                    character
+                )
+            )
+
+            if context:
+                contexts.append(
+                    context
+                )
 
         character_context = (
-            "\n\n".join(sections)
+            "\n\n".join(
+                contexts
+            )
         )
 
-        # ====================================================================
-        # Final image reference context
-        # ====================================================================
+        # ==============================================================
+        # Return
+        # ==============================================================
 
-        character_references = references
-
-        # V3 NodeOutput values are positional.
-        return io.NodeOutput(
+        return (
+            prepared_characters,
+            images,
             character_context,
-            character_references,
         )
 
 
-# ============================================================================
-# Registration
-# ============================================================================
+# ==========================================================================
+# Node registration
+# ==========================================================================
 
 NODE_CLASS_MAPPINGS = {
-    "DNDPrepareCharacters": DNDPrepareCharacters,
+    "DNDPrepareCharacters":
+        DNDPrepareCharacters,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DNDPrepareCharacters": "D&D Prepare Characters",
+    "DNDPrepareCharacters":
+        "D&D Prepare Characters",
 }

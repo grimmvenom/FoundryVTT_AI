@@ -1,0 +1,970 @@
+{
+  "id": "d9cde361-f6ae-447e-927f-87b4822c1ac3",
+  "revision": 1,
+  "last_node_id": 17,
+  "last_link_id": 20,
+  "nodes": [
+    {
+      "id": 10,
+      "type": "CFGGuider",
+      "pos": [
+        650,
+        -80
+      ],
+      "size": [
+        260,
+        160
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 6
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "title": "CFG — 1.0",
+      "properties": {
+        "Node name for S&R": "CFGGuider"
+      },
+      "widgets_values": [
+        1
+      ],
+      "widgets_values_named": {
+        "cfg": 1
+      }
+    },
+    {
+      "id": 11,
+      "type": "RandomNoise",
+      "pos": [
+        650,
+        220
+      ],
+      "size": [
+        260,
+        110
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "title": "RANDOM SEED",
+      "properties": {
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        192478491593163,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 192478491593163,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 12,
+      "type": "KSamplerSelect",
+      "pos": [
+        650,
+        390
+      ],
+      "size": [
+        260,
+        100
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "title": "SAMPLER",
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "euler"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "euler"
+      }
+    },
+    {
+      "id": 13,
+      "type": "Flux2Scheduler",
+      "pos": [
+        650,
+        540
+      ],
+      "size": [
+        280,
+        150
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "title": "FLUX.2 SCHEDULER — 4 STEPS",
+      "properties": {
+        "Node name for S&R": "Flux2Scheduler"
+      },
+      "widgets_values": [
+        4,
+        1536,
+        1024
+      ],
+      "widgets_values_named": {
+        "steps": 4,
+        "width": 1536,
+        "height": 1024
+      }
+    },
+    {
+      "id": 14,
+      "type": "EmptyFlux2LatentImage",
+      "pos": [
+        980,
+        250
+      ],
+      "size": [
+        280,
+        150
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "title": "OUTPUT SIZE",
+      "properties": {
+        "Node name for S&R": "EmptyFlux2LatentImage"
+      },
+      "widgets_values": [
+        1536,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1536,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    {
+      "id": 15,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1000,
+        -80
+      ],
+      "size": [
+        300,
+        190
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 13
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 15
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 14
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 16
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            18
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "title": "GENERATE — 4 STEPS",
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced"
+      }
+    },
+    {
+      "id": 16,
+      "type": "VAEDecode",
+      "pos": [
+        1370,
+        -40
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 18
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "title": "DECODE",
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 9,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        596,
+        -275
+      ],
+      "size": [
+        240,
+        80
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "title": "ZERO NEGATIVE",
+      "properties": {
+        "Node name for S&R": "ConditioningZeroOut"
+      }
+    },
+    {
+      "id": 3,
+      "type": "VAELoader",
+      "pos": [
+        -868.19,
+        -85.52
+      ],
+      "size": [
+        360,
+        80
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            7,
+            8
+          ]
+        }
+      ],
+      "title": "FLUX.2 VAE",
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "flux2-vae.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "flux2-vae.safetensors"
+      }
+    },
+    {
+      "id": 2,
+      "type": "CLIPLoader",
+      "pos": [
+        -864.56,
+        -246.55
+      ],
+      "size": [
+        360,
+        120
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "title": "QWEN3 8B FP8",
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen_3_8b_fp8mixed.safetensors",
+        "flux2",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen_3_8b_fp8mixed.safetensors",
+        "type": "flux2",
+        "device": "default"
+      }
+    },
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        -866.859,
+        -406.69
+      ],
+      "size": [
+        360,
+        110
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "title": "FLUX.2 KLEIN 9B FP8",
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux-2-klein-9b-fp8.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "flux-2-klein-9b-fp8.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 6,
+      "type": "DNDPrepareCharacterReferences",
+      "pos": [
+        -177.19,
+        370.79
+      ],
+      "size": [
+        320,
+        220
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "character_images",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 9
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "title": "D&D PREPARE CHARACTER REFERENCES",
+      "properties": {
+        "Node name for S&R": "DNDPrepareCharacterReferences"
+      }
+    },
+    {
+      "id": 17,
+      "type": "PreviewImage",
+      "pos": [
+        1358.39,
+        156.65
+      ],
+      "size": [
+        797.66,
+        763.78
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "title": "PREVIEW",
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 18,
+      "type": "SaveImage",
+      "pos": [
+        2202.42,
+        -188.83
+      ],
+      "size": [
+        400,
+        400
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "SAVE RESULT",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "Flux2-DND-MultiCharacter"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Flux2-DND-MultiCharacter"
+      }
+    },
+    {
+      "id": 7,
+      "type": "DNDScenePrompt",
+      "pos": [
+        -269.76,
+        -751.13
+      ],
+      "size": [
+        745.49,
+        915.59
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        },
+        {
+          "name": "character_context",
+          "type": "STRING",
+          "widget": {
+            "name": "character_context"
+          },
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            9,
+            10
+          ]
+        }
+      ],
+      "title": "D&D SCENE PROMPT",
+      "properties": {
+        "Node name for S&R": "DNDScenePrompt"
+      },
+      "widgets_values": [
+        "",
+        "A cinematic D&D dark fantasy scene in a tavern.\n\n\ncharacters are hanging out in a tavern having a good time drinking, eating, etc...\nno weapons in the scene.\n\n\nThere are 4 characters in this scene:\n- Braxen\n- Arcasus\n- Laroo\n- Marrow\n\ndo not merge multiple character or their attributes into a single character.\nkeep clothes and attributes as close to the reference image as possible. Avoid hallucinating extra features.",
+        "no extra limbs (2 arms, 2 legs, and 1 head for each character).\nhands should only have 1 thumb and 4 fingers.\nno weapons\nno additional armor other than what is in character reference\ncharacters should not phase through eachother."
+      ],
+      "widgets_values_named": {
+        "character_context": "",
+        "scene": "A cinematic D&D dark fantasy scene in a tavern.\n\n\ncharacters are hanging out in a tavern having a good time drinking, eating, etc...\nno weapons in the scene.\n\n\nThere are 4 characters in this scene:\n- Braxen\n- Arcasus\n- Laroo\n- Marrow\n\ndo not merge multiple character or their attributes into a single character.\nkeep clothes and attributes as close to the reference image as possible. Avoid hallucinating extra features.",
+        "global_avoid": "no extra limbs (2 arms, 2 legs, and 1 head for each character).\nhands should only have 1 thumb and 4 fingers.\nno weapons\nno additional armor other than what is in character reference\ncharacters should not phase through eachother."
+      },
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 4,
+      "type": "DNDCharacterEditor",
+      "pos": [
+        -1171.61,
+        363.18
+      ],
+      "size": [
+        406,
+        681
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CHARACTER",
+          "type": "CHARACTER",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "CHARACTER IMAGE",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "CHARACTER CONTEXT",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "D&D CHARACTER EDITOR — TEMPORARY",
+      "properties": {
+        "Node name for S&R": "DNDCharacterEditor"
+      },
+      "widgets_values": [
+        "marrow",
+        "marrow.jpeg",
+        "a heavy set blue dragon with blue skin / scales, blue lizard eyes. He wears a leather harness and leather bracers. Has 2 blue dragon wings.",
+        "heavy set blue dragon\nblue lizard eyes\nleather harness\nleather bracers\n2 dragon wings\n1 dragon tail",
+        "extra limbs (1 head, 2 arms, 2 legs, 2 wings, 1 dragon tail, hands have 5 fingers).\n",
+        false,
+        "image"
+      ],
+      "widgets_values_named": {
+        "character_name": "marrow",
+        "reference_image": "marrow.jpeg",
+        "description": "a heavy set blue dragon with blue skin / scales, blue lizard eyes. He wears a leather harness and leather bracers. Has 2 blue dragon wings.",
+        "preserve": "heavy set blue dragon\nblue lizard eyes\nleather harness\nleather bracers\n2 dragon wings\n1 dragon tail",
+        "avoid": "extra limbs (1 head, 2 arms, 2 legs, 2 wings, 1 dragon tail, hands have 5 fingers).\n",
+        "save_character": false,
+        "upload": "image"
+      },
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 5,
+      "type": "DNDPrepareCharacters",
+      "pos": [
+        -681.87,
+        372.37
+      ],
+      "size": [
+        320,
+        244
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "characters",
+          "shape": 7,
+          "type": "CHARACTER",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CHARACTERS",
+          "shape": 6,
+          "type": "CHARACTER",
+          "links": null
+        },
+        {
+          "name": "CHARACTER IMAGE",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "CHARACTER CONTEXT",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "title": "D&D PREPARE CHARACTERS",
+      "properties": {
+        "Node name for S&R": "DNDPrepareCharacters"
+      },
+      "widgets_values": [
+        "braxen",
+        "arcasus",
+        "laroo",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "library_character_0": "braxen",
+        "library_character_1": "arcasus",
+        "library_character_2": "laroo",
+        "library_character_3": "",
+        "library_character_4": "",
+        "library_character_5": "",
+        "library_character_6": "",
+        "library_character_7": "",
+        "library_character_8": "",
+        "library_character_9": ""
+      },
+      "color": "#233",
+      "bgcolor": "#355"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      10,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      2,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "CHARACTER"
+    ],
+    [
+      4,
+      5,
+      1,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      5,
+      2,
+      7,
+      1,
+      "STRING"
+    ],
+    [
+      6,
+      6,
+      0,
+      10,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      7,
+      3,
+      0,
+      6,
+      2,
+      "VAE"
+    ],
+    [
+      8,
+      3,
+      0,
+      16,
+      1,
+      "VAE"
+    ],
+    [
+      9,
+      7,
+      0,
+      6,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      10,
+      7,
+      0,
+      9,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      12,
+      9,
+      0,
+      10,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      13,
+      11,
+      0,
+      15,
+      0,
+      "NOISE"
+    ],
+    [
+      14,
+      12,
+      0,
+      15,
+      2,
+      "SAMPLER"
+    ],
+    [
+      15,
+      10,
+      0,
+      15,
+      1,
+      "GUIDER"
+    ],
+    [
+      16,
+      13,
+      0,
+      15,
+      3,
+      "SIGMAS"
+    ],
+    [
+      17,
+      14,
+      0,
+      15,
+      4,
+      "LATENT"
+    ],
+    [
+      18,
+      15,
+      0,
+      16,
+      0,
+      "LATENT"
+    ],
+    [
+      19,
+      16,
+      0,
+      17,
+      0,
+      "IMAGE"
+    ],
+    [
+      20,
+      17,
+      0,
+      18,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "D&D CHARACTERS",
+      "bounding": [
+        -1186.71,
+        270.81,
+        1360.91,
+        675.45
+      ],
+      "color": "#353",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "FLUX.2 KLEIN 9B",
+      "bounding": [
+        -909.28,
+        -476.94,
+        447.46,
+        477.73
+      ],
+      "color": "#335",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "GENERATION",
+      "bounding": [
+        580,
+        -150,
+        1500,
+        850
+      ],
+      "color": "#353"
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6830134553650705,
+      "offset": [
+        1047.6534065545427,
+        331.87703148905325
+      ]
+    },
+    "frontendVersion": "1.49.6"
+  },
+  "version": 0.4
+}

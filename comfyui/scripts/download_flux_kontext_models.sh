@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Deprecated: Use download_flux2_models.sh instead. This script will be removed in a future release.
 
 set -euo pipefail
 

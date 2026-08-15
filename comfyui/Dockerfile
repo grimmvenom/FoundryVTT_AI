@@ -100,8 +100,6 @@ RUN mkdir -p \
 
 COPY scripts/extra_model_paths.yaml "${COMFYUI_HOME}/extra_model_paths.yaml"
 
-# COPY scripts/download_flux_kontext_models.sh /usr/local/bin/download_flux_kontext_models.sh
-# RUN chmod +x /usr/local/bin/download_flux_kontext_models.sh
 
 COPY scripts/download_flux2_models.sh /usr/local/bin/download_flux2_models.sh
 RUN chmod +x /usr/local/bin/download_flux2_models.sh

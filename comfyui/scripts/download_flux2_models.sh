@@ -15,16 +15,11 @@ set -euo pipefail
 #
 #   vae/
 #       flux2-vae.safetensors
+#       full_encoder_small_decoder.safetensors
 #
-# No Hugging Face authentication is required.
+# No Hugging Face CLI or authentication is required.
 #
-# The FLUX.2 Klein 9B FP8 diffusion model is downloaded from a public
-# Hugging Face mirror because the official BFL repository is gated.
-#
-# The Qwen encoder and VAE are downloaded from the public Comfy-Org
-# repositories.
-#
-# Override the model directory with:
+# COMFYUI_MODELS can be overridden:
 #
 #   COMFYUI_MODELS=/some/path ./download_flux2_models.sh
 #
@@ -44,51 +39,54 @@ VAE_DIR="${COMFYUI_MODELS}/vae"
 #
 # FLUX.2 Klein 9B FP8
 #
-# Official BFL repository:
-#
-#   black-forest-labs/FLUX.2-klein-9b-fp8
-#
-# is gated.
-#
-# VixenQuest's public mirror contains the same file/Xet hash.
-#
-# File size:
-#
-#   ~9.43 GB
+# The official BFL repository is gated.
+# This is a public mirror of the exact file.
 #
 FLUX2_URL="https://huggingface.co/VixenQuest/flux2/resolve/main/flux-2-klein-9b-fp8.safetensors?download=true"
 
-#
-# Comfy-Org Qwen 3 8B FP8 mixed text encoder
-#
-QWEN_URL="https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/resolve/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors?download=true"
 
 #
-# Comfy-Org FLUX.2 VAE
+# Qwen 3 8B FP8 mixed
 #
-VAE_URL="https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/resolve/main/split_files/vae/flux2-vae.safetensors?download=true"
+# Public Comfy-Org repository.
+#
+QWEN_URL="https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors?download=true"
+
+
+#
+# FLUX.2 VAE
+#
+VAE_URL="https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors?download=true"
+
+
+#
+# FLUX.2 Small Decoder / Full Encoder
+#
+# Official Black Forest Labs repository.
+#
+# This is the VAE used by the current ComfyUI FLUX.2 workflows.
+#
+FULL_ENCODER_SMALL_DECODER_URL="https://huggingface.co/black-forest-labs/FLUX.2-small-decoder/resolve/main/full_encoder_small_decoder.safetensors?download=true"
 
 
 ###############################################################################
-# Expected SHA256 values
+# SHA256 checksums
 ###############################################################################
 
 #
 # FLUX.2 Klein 9B FP8
 #
-# Verified against the public VixenQuest mirror.
+# 9,433,061,528 bytes
 #
 FLUX2_SHA256="865ba09f5b4c3cbd3468a4bd3acb9fcb2f8740c54317482f0bcd4ed1d3655cee"
 
-#
-# Qwen 3 8B FP8 mixed
-#
-QWEN_SHA256="abad16806e0cbabc54e0325d6565847443fe396d5f0be38bb3cd3fe75a1201d6"
 
 #
-# FLUX.2 VAE
+# FLUX.2 Small Decoder / Full Encoder
 #
-VAE_SHA256="868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3"
+# 249,519,092 bytes
+#
+FULL_ENCODER_SMALL_DECODER_SHA256="ea4273f02d1fafbf8e1d1c2cf6018ed8748652eb0bf34f2dd91171f16f15ab62"
 
 
 ###############################################################################
@@ -118,12 +116,12 @@ echo
 echo "ComfyUI models:"
 echo "  ${COMFYUI_MODELS}"
 echo
-echo "No Hugging Face authentication is required."
+echo "Hugging Face authentication is NOT required."
 echo
 
 
 ###############################################################################
-# Directory setup
+# Create directories
 ###############################################################################
 
 mkdir -p \
@@ -140,7 +138,7 @@ download_model() {
 
     local url="$1"
     local destination="$2"
-    local expected_sha256="$3"
+    local expected_sha256="${3:-}"
 
     local filename
     filename="$(basename "${destination}")"
@@ -159,35 +157,47 @@ download_model() {
     if [[ -f "${destination}" ]]; then
 
         echo "File already exists."
-        echo "Verifying SHA256..."
 
-        local actual_sha256
+        if [[ -n "${expected_sha256}" ]]; then
 
-        actual_sha256="$(
-            sha256sum "${destination}" |
-            awk '{print $1}'
-        )"
+            echo "Verifying SHA256..."
 
-        if [[ "${actual_sha256}" == "${expected_sha256}" ]]; then
+            local actual_sha256
 
-            echo "SHA256 OK."
+            actual_sha256="$(
+                sha256sum "${destination}" |
+                awk '{print $1}'
+            )"
+
+            if [[ "${actual_sha256}" == "${expected_sha256}" ]]; then
+
+                echo "SHA256 OK."
+                echo "Skipping download."
+
+                return 0
+            fi
+
+            echo
+            echo "WARNING: Existing file failed SHA256 verification."
+            echo
+            echo "Expected:"
+            echo "  ${expected_sha256}"
+            echo
+            echo "Actual:"
+            echo "  ${actual_sha256}"
+            echo
+            echo "Removing invalid file."
+
+            rm -f "${destination}"
+
+        else
+
+            echo "No checksum supplied."
             echo "Skipping download."
 
             return 0
+
         fi
-
-        echo
-        echo "WARNING: Existing file failed SHA256 verification."
-        echo
-        echo "Expected:"
-        echo "  ${expected_sha256}"
-        echo
-        echo "Actual:"
-        echo "  ${actual_sha256}"
-        echo
-        echo "Removing invalid file."
-
-        rm -f "${destination}"
 
     fi
 
@@ -198,20 +208,19 @@ download_model() {
 
     local temporary_file
 
-    temporary_file="$(
-        mktemp "${destination}.download.XXXXXX"
-    )
+    temporary_file="${destination}.download"
 
-    echo
-    echo "Downloading..."
-    echo
-    echo "${url}"
-    echo
+    rm -f "${temporary_file}"
 
 
     ###########################################################################
     # Download
     ###########################################################################
+
+    echo
+    echo "Downloading:"
+    echo "${url}"
+    echo
 
     if ! curl \
         --fail \
@@ -219,7 +228,7 @@ download_model() {
         --retry 5 \
         --retry-delay 5 \
         --retry-all-errors \
-        --continue-attempts \
+        --progress-bar \
         --output "${temporary_file}" \
         "${url}"
     then
@@ -238,45 +247,47 @@ download_model() {
 
 
     ###########################################################################
-    # SHA256 verification
+    # Verify checksum
     ###########################################################################
 
-    echo
-    echo "Download complete."
-    echo "Verifying SHA256..."
-    echo
-
-    local actual_sha256
-
-    actual_sha256="$(
-        sha256sum "${temporary_file}" |
-        awk '{print $1}'
-    )"
-
-    if [[ "${actual_sha256}" != "${expected_sha256}" ]]; then
+    if [[ -n "${expected_sha256}" ]]; then
 
         echo
-        echo "ERROR: SHA256 verification failed."
-        echo
-        echo "File:"
-        echo "  ${filename}"
-        echo
-        echo "Expected:"
-        echo "  ${expected_sha256}"
-        echo
-        echo "Actual:"
-        echo "  ${actual_sha256}"
-        echo
-        echo "The downloaded file will NOT be installed."
-        echo
+        echo "Download complete."
+        echo "Verifying SHA256..."
 
-        rm -f "${temporary_file}"
+        local actual_sha256
 
-        exit 1
+        actual_sha256="$(
+            sha256sum "${temporary_file}" |
+            awk '{print $1}'
+        )"
+
+        if [[ "${actual_sha256}" != "${expected_sha256}" ]]; then
+
+            echo
+            echo "ERROR: SHA256 verification failed."
+            echo
+            echo "File:"
+            echo "  ${filename}"
+            echo
+            echo "Expected:"
+            echo "  ${expected_sha256}"
+            echo
+            echo "Actual:"
+            echo "  ${actual_sha256}"
+            echo
+            echo "The downloaded file will NOT be installed."
+            echo
+
+            rm -f "${temporary_file}"
+
+            exit 1
+        fi
+
+        echo "SHA256 OK."
+
     fi
-
-
-    echo "SHA256 OK."
 
 
     ###########################################################################
@@ -294,7 +305,7 @@ download_model() {
 
 
 ###############################################################################
-# FLUX.2 Klein 9B FP8 diffusion model
+# FLUX.2 Klein 9B FP8
 ###############################################################################
 
 download_model \
@@ -304,13 +315,12 @@ download_model \
 
 
 ###############################################################################
-# Qwen 3 8B FP8 mixed text encoder
+# Qwen 3 8B FP8 mixed
 ###############################################################################
 
 download_model \
     "${QWEN_URL}" \
-    "${TEXT_ENCODER_DIR}/qwen_3_8b_fp8mixed.safetensors" \
-    "${QWEN_SHA256}"
+    "${TEXT_ENCODER_DIR}/qwen_3_8b_fp8mixed.safetensors"
 
 
 ###############################################################################
@@ -319,8 +329,17 @@ download_model \
 
 download_model \
     "${VAE_URL}" \
-    "${VAE_DIR}/flux2-vae.safetensors" \
-    "${VAE_SHA256}"
+    "${VAE_DIR}/flux2-vae.safetensors"
+
+
+###############################################################################
+# FLUX.2 Small Decoder / Full Encoder
+###############################################################################
+
+download_model \
+    "${FULL_ENCODER_SMALL_DECODER_URL}" \
+    "${VAE_DIR}/full_encoder_small_decoder.safetensors" \
+    "${FULL_ENCODER_SMALL_DECODER_SHA256}"
 
 
 ###############################################################################
@@ -339,7 +358,8 @@ echo
 ls -lh \
     "${DIFFUSION_DIR}/flux-2-klein-9b-fp8.safetensors" \
     "${TEXT_ENCODER_DIR}/qwen_3_8b_fp8mixed.safetensors" \
-    "${VAE_DIR}/flux2-vae.safetensors"
+    "${VAE_DIR}/flux2-vae.safetensors" \
+    "${VAE_DIR}/full_encoder_small_decoder.safetensors"
 
 echo
 echo "Model directories:"
