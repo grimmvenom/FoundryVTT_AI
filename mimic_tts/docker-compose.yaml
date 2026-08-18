@@ -3,6 +3,8 @@
 
 services:
   mimic-tts:
+    # Keep using the image built before this project directory was moved.
+    image: mimic_tts-mimic-tts:latest
     build:
       context: .
       dockerfile: Dockerfile

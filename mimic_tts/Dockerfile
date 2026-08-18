@@ -16,12 +16,9 @@ RUN apt-get update && apt-get install -y \
     libsox-fmt-all \
     ffmpeg \
     libsndfile1 \
-    && rm -rf /var/lib/apt/lists/*
-
-
-RUN apt-get install -y \
     yt-dlp \
-    vlc
+    vlc \
+    && rm -rf /var/lib/apt/lists/*
 
 #
 # Python dependencies

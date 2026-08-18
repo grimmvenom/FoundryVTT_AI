@@ -3,38 +3,29 @@ from nodes import CLIPTextEncode
 
 class DNDScenePrompt:
     """
-    Build the textual conditioning for a D&D scene.
+    Build textual conditioning for a D&D scene.
 
     Character identity is supplied automatically through CHARACTER_CONTEXT.
 
-    This version deliberately structures character information so that
-    each character has a distinct identity block. The goal is to reduce
-    attribute migration between characters when multiple character
-    references are supplied to FLUX.2.
-
-    Character reference images are handled downstream by the FLUX.2
-    reference workflow.
+    This version deliberately uses strong per-character identity boundaries
+    so that multiple referenced characters remain distinct and their
+    attributes are not merged between characters.
     """
 
-    # ------------------------------------------------------------------
-    # Character identity instruction
-    #
-    # Keep this concise and explicit. We do not want a huge collection
-    # of negative instructions competing with the actual character
-    # descriptions.
-    # ------------------------------------------------------------------
-
     CHARACTER_IDENTITY_INSTRUCTION = (
-        "IMPORTANT CHARACTER IDENTITY RULES: "
-        "Each character is a separate individual. "
-        "Match each character to their own reference image and description. "
-        "Keep physical features, clothing, accessories, hair, ears, "
-        "body traits, colors, and other identifying attributes attached "
-        "to the correct character. "
-        "Do not transfer attributes from one character to another. "
-        "Do not merge characters. "
-        "Do not duplicate characters. "
-        "Do not replace one character with another."
+        "IMPORTANT CHARACTER IDENTITY RULES:\n"
+        "There are multiple distinct characters in this scene.\n"
+        "Treat EVERY character listed below as *separate* individuals.\n"
+        "Each character MUST keep ONLY their *own original appearance* and attributes.\n"
+        "Do NOT transfer attributes from one character to aNOTher.\n"
+        "Do NOT merge character identities.\n"
+        "Do NOT duplicate characters.\n"
+        "Do NOT replace one character with another.\n"
+        "Every listed character MUST appear exactly once.\n"
+        "Preserve each character's hair, face, skin color, clothing, "
+        "body features, accessories, markings, ears, horns, tattoos, "
+        "and other identifying traits according to that character's "
+        "reference and description."
     )
 
     @classmethod
@@ -43,17 +34,9 @@ class DNDScenePrompt:
         return {
             "required": {
 
-                # ==========================================================
-                # CLIP
-                # ==========================================================
-
                 "clip": (
                     "CLIP",
                 ),
-
-                # ==========================================================
-                # Character textual context
-                # ==========================================================
 
                 "character_context": (
                     "STRING",
@@ -64,10 +47,6 @@ class DNDScenePrompt:
                     },
                 ),
 
-                # ==========================================================
-                # Scene
-                # ==========================================================
-
                 "scene": (
                     "STRING",
                     {
@@ -76,10 +55,6 @@ class DNDScenePrompt:
                         "dynamicPrompts": False,
                     },
                 ),
-
-                # ==========================================================
-                # Global Avoid
-                # ==========================================================
 
                 "global_avoid": (
                     "STRING",
@@ -131,52 +106,39 @@ class DNDScenePrompt:
         sections = []
 
         # ------------------------------------------------------------------
-        # Characters
-        #
-        # The character context comes directly from DNDPrepareCharacters.
-        #
-        # We explicitly frame these as separate individuals before the
-        # actual character descriptions.
+        # Character identity
         # ------------------------------------------------------------------
 
         if character_context:
 
             sections.append(
-                "CHARACTER REFERENCES\n"
-                "The image contains the following distinct characters. "
-                "Each character corresponds to their own reference image. "
-                "Treat every character description as belonging only to "
-                "that character.\n\n"
+                "CHARACTER REFERENCES:\n"
                 + character_context
-                + "\n\n"
-                + self.CHARACTER_IDENTITY_INSTRUCTION
+            )
+
+            sections.append(
+                self.CHARACTER_IDENTITY_INSTRUCTION
             )
 
         # ------------------------------------------------------------------
         # Scene
-        #
-        # The scene should describe actions, environment, composition,
-        # relationships, and positioning without redefining character
-        # identity.
         # ------------------------------------------------------------------
 
         if scene:
 
             sections.append(
-                "SCENE\n"
+                "SCENE:\n"
                 + scene
             )
 
         # ------------------------------------------------------------------
-        # Global Avoid
-        #
-        # These restrictions apply to the entire generated image.
+        # Global restrictions
         # ------------------------------------------------------------------
 
         if global_avoid:
 
             sections.append(
-                "GLOBAL AVOID\n"
+                "GLOBAL AVOID:\n"
                 + global_avoid
             )
 
@@ -187,10 +149,6 @@ class DNDScenePrompt:
         prompt = "\n\n".join(
             sections
         )
-
-        # ------------------------------------------------------------------
-        # Encode using native ComfyUI CLIPTextEncode
-        # ------------------------------------------------------------------
 
         conditioning = (
             CLIPTextEncode()
